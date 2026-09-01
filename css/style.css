@@ -1,0 +1,548 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft Yahei",sans-serif;
+}
+html,body{
+    width:100%;
+    height:100%;
+    overflow:auto;
+    background-color:#1e293b;
+    color:#e2e8f0;
+}
+#rootViewport{
+    width:100%;
+    height:100%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+/* 极小窗口下的极简视图 <450×450 */
+.mini-view{
+    display:none;
+    text-align:center;
+    font-size:18px;
+    gap:8px;
+    flex-direction:column;
+}
+/* 主窗口：最小450*450，大于时随视口长宽扩容填满，不再强制正方形 */
+.main-window{
+    position:relative;
+    width:100%;
+    height:100%;
+    min-width:450px;
+    min-height:450px;
+    overflow:hidden;
+}
+/* 中间内容区 */
+#mainContent{
+    width:100%;
+    height:100%;
+}
+.container{
+    width:100%;
+    height:100%;
+    overflow-y:auto;
+    padding:20px;
+}
+.container h1{
+    font-size:20px;
+}
+.card{
+    background:#334155;
+    padding:15px;
+    margin:10px 0;
+    border-radius:6px;
+}
+.card h3{
+    font-size:16px;
+    margin-bottom:6px;
+}
+/* 视界首页：资源一行实时显示 */
+.home-line{
+    font-size:20px;
+    font-weight:bold;
+    color:#e2e8f0;
+    letter-spacing:0.5px;
+}
+/* 代码雨动画窗口卡片 */
+.code-rain-card{
+    padding:0;
+    overflow:hidden;
+}
+button{
+    padding:8px 14px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    margin:4px;
+    font-size:14px;
+}
+.log{
+    height:90px;
+    overflow-y:auto;
+    background:#0f172a;
+    padding:10px;
+    font-size:13px;
+}
+
+/* 隐藏所有滚动条但保留滚动功能 */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.container::-webkit-scrollbar,
+.log::-webkit-scrollbar,
+.side-inner::-webkit-scrollbar{
+    display:none;
+}
+html, body, .container, .log, .side-inner{
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+}
+
+/* ========= 四边抽屉【标签移入面板，随面板联动滑动】 ========= */
+.side-wrap{
+    position:absolute;
+    z-index:900;
+    pointer-events:none;  /* 收起时不遮挡主界面交互 */
+}
+.side-panel, .side-tab{
+    pointer-events:auto;  /* 面板和标签仍可交互 */
+}
+/* 面板：overflow:visible 让延伸出的标签可见，内容滚动交给 side-inner */
+.side-panel{
+    position:absolute;
+    background:#334155;
+    overflow:visible;
+    will-change: transform;
+    transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+}
+.side-inner{
+    padding:12px;
+    width:100%;
+    height:100%;
+    overflow:auto;
+}
+/* 标签：固定尺寸，位于面板内侧边缘并向外延伸，收起时恰好贴在窗口边缘 */
+.side-tab{
+    position:absolute;
+    z-index: 1101;
+    background:#475569;
+    cursor:pointer;
+    user-select:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: opacity 0.22s ease;
+    font-size:12px;
+}
+/* 拉伸手柄：位于面板内侧边缘，拖动调整抽屉尺寸（保持吸附浏览器边缘） */
+.side-resize{
+    position:absolute;
+    background:rgba(255,255,255,0.07);
+    transition: background 0.2s ease;
+    z-index: 1102;
+}
+.side-resize:hover{
+    background:rgba(59,130,246,0.45);
+}
+.side-left .side-resize, .side-right .side-resize{
+    top:0;
+    width:6px;
+    height:100%;
+    cursor:col-resize;
+}
+.side-left .side-resize{ right:0; }
+.side-right .side-resize{ left:0; }
+.side-top .side-resize, .side-bottom .side-resize{
+    left:0;
+    width:100%;
+    height:6px;
+    cursor:row-resize;
+}
+.side-top .side-resize{ bottom:0; }
+.side-bottom .side-resize{ top:0; }
+
+/* ---左侧抽屉：脚本录制面板，占满主窗口高度，默认最小宽度200px（可拖动拉伸） --- */
+.side-left{
+    top:0;
+    left:0;
+    height:100%;
+    width:200px;
+}
+.side-left .side-tab{
+    top:50%;
+    right:-16px;          /* 延伸出面板右边缘，收起时贴在窗口左边缘 */
+    transform: translateY(-50%);
+    width:16px;
+    height:80px;
+    writing-mode:vertical-lr;
+    border-radius: 0 6px 6px 0;
+}
+.side-left .side-panel{
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    transform: translateX(-100%);
+}
+.side-left.open .side-panel{
+    transform: translateX(0%);
+}
+
+/* ---右侧抽屉（默认最小宽度140px）--- */
+.side-right{
+    top:0;
+    right:0;
+    height:100%;
+    width:140px;
+}
+.side-right .side-tab{
+    top:50%;
+    left:-16px;           /* 延伸出面板左边缘，收起时贴在窗口右边缘 */
+    transform: translateY(-50%);
+    width:16px;
+    height:80px;
+    writing-mode:vertical-lr;
+    border-radius: 6px 0 0 6px;
+}
+.side-right .side-panel{
+    top:0;
+    right:0;
+    width:100%;
+    height:100%;
+    transform: translateX(100%);
+}
+.side-right.open .side-panel{
+    transform: translateX(0%);
+}
+
+/* ---顶部抽屉（默认最小高度110px）--- */
+.side-top{
+    top:0;
+    left:0;
+    width:100%;
+    height:110px;
+}
+.side-top .side-tab{
+    left:50%;
+    bottom:-16px;         /* 延伸出面板下边缘，收起时贴在窗口上边缘 */
+    transform: translateX(-50%);
+    width:80px;
+    height:16px;
+    border-radius: 0 0 6px 6px;
+}
+.side-top .side-panel{
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    transform: translateY(-100%);
+}
+.side-top.open .side-panel{
+    transform: translateY(0%);
+}
+
+/* ---底部抽屉（默认最小高度170px）--- */
+.side-bottom{
+    bottom:0;
+    left:0;
+    width:100%;
+    height:170px;
+}
+.side-bottom .side-tab{
+    left:50%;
+    top:-16px;            /* 延伸出面板上边缘，收起时贴在窗口下边缘 */
+    transform: translateX(-50%);
+    width:80px;
+    height:16px;
+    border-radius: 6px 6px 0 0;
+}
+.side-bottom .side-panel{
+    bottom:0;
+    left:0;
+    width:100%;
+    height:100%;
+    transform: translateY(100%);
+}
+.side-bottom.open .side-panel{
+    transform: translateY(0%);
+}
+
+/* ========= 底部终端 ========= */
+.side-bottom .side-inner{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+.term-out-wrap{
+    position:relative;
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+}
+#termOut{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    background:#0f172a;
+    padding:8px 10px;
+    font-size:12px;
+    line-height:1.7;
+    word-break:break-all;
+    border-radius:4px;
+    user-select:text;
+    scrollbar-width:none;            /* 隐藏原生滚动条 */
+    -ms-overflow-style:none;
+}
+#termOut::-webkit-scrollbar{width:0;height:0;display:none;}
+/* 迷你滑动指示条：滑动时出现，空闲淡出隐藏 */
+#termScrollbar{
+    position:absolute;
+    right:2px;
+    top:0;
+    width:3px;
+    border-radius:3px;
+    background:rgba(148,163,184,.55);
+    opacity:0;
+    transition:opacity .45s ease;
+    z-index:8;
+    pointer-events:none;
+}
+#termScrollbar.show{opacity:1;}
+.term-line{
+    padding:1px 2px;
+    white-space:pre-wrap;
+}
+/* 系统日志行：带背景色 */
+.term-line.term-log{
+    background:rgba(37,99,235,0.16);
+    color:#bfdbfe;
+    border-left:3px solid #2563eb;
+    padding:2px 6px;
+    margin:2px 0;
+    border-radius:3px;
+}
+/* 命令回显行 */
+.term-line.term-cmd{
+    color:#4ade80;
+}
+/* 按键记录行 */
+.term-line.term-key{
+    color:#e2e8f0;
+}
+.term-input-row{
+    margin-top:8px;
+    display:flex;
+    gap:6px;
+}
+#termInput{
+    flex:1;
+    width:100%;
+    padding:6px 10px;
+    font-size:13px;
+    color:#e2e8f0;
+    background:#1e293b;
+    border:1px solid #475569;
+    border-radius:4px;
+    outline:none;
+    box-sizing:border-box;
+}
+#termInput:focus{ border-color:#2563eb; }
+#termInput::placeholder{ color:#64748b; }
+
+/* ========= 左侧面板：脚本工具（scriptTool.js 注入自身样式） ========= */
+.side-left .side-inner{
+    display:flex;
+    flex-direction:column;
+}
+
+/* 透明度交互规则 */
+/* 收起状态：完全透明，hover才显现 */
+.side-wrap:not(.open) .side-tab{
+    opacity:0.1;
+}
+.side-wrap:not(.open) .side-tab:hover{
+    opacity:1;
+}
+/* 打开状态：设置0.99透明度，hover完全不透明 */
+.side-wrap.open .side-tab{
+    opacity:0.99;
+}
+.side-wrap.open .side-tab:hover{
+    opacity:1;
+}
+
+/* ========= 标题栏与标签按钮组 ========= */
+.title-bar{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    min-height:30px;
+}
+/* 只有带标签组的标题栏，hover时隐藏标题露出标签 */
+.title-bar-tabbed:hover h1{
+    opacity:0;
+    pointer-events:none;
+}
+.title-bar h1{
+    transition: opacity 0.28s ease;
+}
+/* 左侧空位矢量logo：默认隐藏，hover标题栏时显示，颜色由CSS变量实时控制 */
+.logo-box{
+    position:absolute;
+    left:0;
+    top:0;
+    width:20%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    opacity:0;
+    transition: opacity 0.28s ease;
+}
+.title-bar-tabbed:hover .logo-box{
+    opacity:1;
+    pointer-events:auto;
+}
+.logo-box .logo-text{
+    font-size:26px;
+    font-weight:bold;
+    line-height:1;
+    display:block;
+    color: var(--logo-color, #38bdf8);
+    transform-origin: center;
+    animation: logoBreathe 3s ease-in-out infinite;
+}
+.logo-spin{
+    animation: logoSpin 10s linear infinite;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+@keyframes logoSpin{
+    from{ transform: rotate(0deg); }
+    to{ transform: rotate(360deg); }
+}
+@keyframes logoBreathe{
+    0%, 100%{ opacity:0.55; filter: brightness(0.75); transform: translateY(5px) scale(1); }
+    50%{ opacity:1; filter: brightness(1.2); transform: translateY(5px) scale(1.25); }
+}
+.tab-group{
+    position:absolute;
+    top:0;
+    left:20%;
+    right:20%;
+    display:flex;
+    gap:2px;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.28s ease;
+}
+.title-bar-tabbed:hover .tab-group{
+    opacity:1;
+    pointer-events:auto;
+}
+
+/* 关闭标题遮挡：标签常驻显示，标题隐藏，logo保持常显 */
+.title-bar-tabbed.tabs-always h1{
+    opacity:0;
+    pointer-events:none;
+}
+.title-bar-tabbed.tabs-always .logo-box{
+    opacity:1;
+    pointer-events:auto;
+}
+.title-bar-tabbed.tabs-always .tab-group{
+    opacity:1;
+    pointer-events:auto;
+}
+
+/* 矢量logo点击闪烁效果 */
+.logo-box.flash{
+    animation: logoFlash 0.45s ease;
+}
+@keyframes logoFlash{
+    0%, 100%{ opacity:1; }
+    45%{ opacity:0.1; }
+}
+
+/* 标签按钮基础：2px白边 */
+.tab-btn{
+    flex:1;
+    text-align:center;
+    padding:5px 2px;
+    border:2px solid #fff;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:bold;
+    transition: background-color 0.35s ease, color 0.35s ease;
+    user-select:none;
+    white-space:nowrap;
+    line-height:1.2;
+}
+
+/* 各颜色：默认低饱和（接近背景#1e293b，仅略微偏色），hover纯色 */
+.tab-home{ background:#2a3340; color:#94a3b8; }
+.tab-home:hover{ background:#94a3b8; color:#1e293b; }
+
+.tab-white{ background:#2a3a4e; color:#94a3b8; }
+.tab-white:hover{ background:#f1f5f9; color:#1e293b; }
+
+.tab-green{ background:#1e3329; color:#4ade80; }
+.tab-green:hover{ background:#22c55e; color:#fff; }
+
+.tab-orange{ background:#332a1e; color:#fb923c; }
+.tab-orange:hover{ background:#f97316; color:#fff; }
+
+.tab-red{ background:#331e24; color:#f87171; }
+.tab-red:hover{ background:#ef4444; color:#fff; }
+
+.tab-purple{ background:#2a1e33; color:#c084fc; }
+.tab-purple:hover{ background:#a855f7; color:#fff; }
+
+.tab-black{ background:#151c28; color:#64748b; }
+.tab-black:hover{ background:#0a0a0a; color:#fff; }
+
+.tab-setting{ background:#1e3a5f; color:#60a5fa; }
+.tab-setting:hover{ background:#2563eb; color:#fff; }
+
+/* 当前界面标签：保持纯色亮起，不可点击 */
+.tab-btn.active{ cursor:default; }
+.tab-home.active{ background:#94a3b8; color:#1e293b; }
+.tab-white.active{ background:#f1f5f9; color:#1e293b; }
+.tab-green.active{ background:#22c55e; color:#fff; }
+.tab-orange.active{ background:#f97316; color:#fff; }
+.tab-red.active{ background:#ef4444; color:#fff; }
+.tab-purple.active{ background:#a855f7; color:#fff; }
+.tab-black.active{ background:#0a0a0a; color:#fff; }
+.tab-setting.active{ background:#2563eb; color:#fff; }
+
+/* 未开放：完全融入背景，无动态，不可点 */
+.tab-btn.locked{
+    background:#1e293b !important;
+    color:#1e293b !important;
+    border-color:#1e293b !important;
+    cursor:default !important;
+    transition:none !important;
+}
+
+/* 面板返回按钮 */
+.back-btn{
+    padding:6px 14px;
+    background:#475569;
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:13px;
+}
