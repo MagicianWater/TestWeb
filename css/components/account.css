@@ -1,0 +1,61 @@
+/* account - 账号中心特有样式 */
+.theme-pink{border-left:4px solid #ec4899;padding-left:12px;}
+.card h3{color:#f472b6;}
+.tip{font-size:12px;color:#94a3b8;margin:4px 0 8px;line-height:1.5;}
+
+/* 表单 */
+.acct-form{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.acct-input{
+    width:100%;
+    padding:8px 10px;
+    font-size:14px;
+    color:#e2e8f0;
+    background:#1e293b;
+    border:1px solid #475569;
+    border-radius:4px;
+    outline:none;
+    box-sizing:border-box;
+}
+.acct-input:focus{border-color:#ec4899;}
+.acct-input::placeholder{color:#64748b;}
+
+/* 按钮区 */
+.acct-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.acct-btn{
+    padding:6px 18px;
+    font-size:13px;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+.acct-btn:active{transform:translateY(1px);}
+.acct-btn-primary{color:#fff;background:#ec4899;}
+.acct-btn-primary:hover{background:#db2777;}
+.acct-btn-secondary{color:#e2e8f0;background:#334155;border:1px solid #475569;}
+.acct-btn-secondary:hover{background:#475569;}
+.acct-btn-danger{color:#fff;background:#b91c1c;}
+.acct-btn-danger:hover{background:#991b1b;}
+
+/* 信息展示 */
+.acct-info{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.acct-info-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 10px;
+    background:#1e293b;
+    border:1px solid #334155;
+    border-radius:5px;
+}
+.acct-info-label{
+    flex:none;
+    width:72px;
+    font-size:12px;
+    color:#94a3b8;
+}
+.acct-info-value{
+    flex:1;
+    font-size:13px;
+    color:#e2e8f0;
+    word-break:break-all;
+}
