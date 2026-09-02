@@ -1,0 +1,28 @@
+<div class="card theme-accent">
+    <h3>老板快捷键设置</h3>
+    <p class="tip">点击输入框后按下快捷键组合，点击其他位置自动保存</p>
+    <input type="text" id="bossHotkeyInput" class="hotkey-input" placeholder="点击此处录制老板键" readonly>
+    <label>
+        <input type="checkbox" id="enableEsc"> 启用ESC备用老板键
+    </label>
+</div>
+<div class="card theme-accent">
+    <h3>标题栏显示</h3>
+    <button id="titleOverlayBtn">关闭标题遮挡</button>
+</div>
+<div class="card theme-accent">
+    <h3>快捷栏设置</h3>
+    <div id="sideLayoutCfg" class="side-layout-cfg"></div>
+</div>
+<div class="card theme-accent">
+    <h3>功能与脚本管理</h3>
+    <p class="tip">管理所有已加载的工具与特效脚本，可开关浮动窗、查看挂载位置</p>
+    <div id="widgetMgr" class="widget-mgr"></div>
+</div>
+<div class="card theme-accent">
+    <h3>存档管理</h3>
+    <p class="tip">导出当前进度为存档文件，或从存档文件恢复进度</p>
+    <button id="exportSaveBtn" class="setting-btn">导出存档</button>
+    <button id="importSaveBtn" class="setting-btn">载入存档</button>
+    <p class="tip" id="saveStatusTip" style="min-height:18px;"></p>
+</div>

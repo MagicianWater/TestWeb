@@ -1,9 +1,9 @@
-//===== 游戏核心数据 =====
+﻿//===== 游戏核心数据 =====
 let count = 0;
-let perSecond = 0.05; // 代码雨视觉效果查看用，可随时改回
+let perSecond = 10; // 默认增长速度
 let cost = 10;
 //资源显示名（名字待定，方便后续修改）
-const RESOURCE_NAME = "资源";
+const RESOURCE_NAME = "词元";
 //老板键状态
 let isHide = false;
 const gameTitle = "服务器运行监控";
@@ -52,13 +52,13 @@ const logoColors = {
 
 //标签 → 组件文件映射
 const componentMap = {
-    white:   {html:'components/componentUI1.html', css:'css/componentUI1.css', js:'js/componentUI1.js', obj:'ComponentUI1'},
-    green:   {html:'components/componentUI2.html', css:'css/componentUI2.css', js:'js/componentUI2.js', obj:'ComponentUI2'},
-    orange:  {html:'components/componentUI3.html', css:'css/componentUI3.css', js:'js/componentUI3.js', obj:'ComponentUI3'},
-    red:     {html:'components/componentUI4.html', css:'css/componentUI4.css', js:'js/componentUI4.js', obj:'ComponentUI4'},
-    purple:  {html:'components/componentUI5.html', css:'css/componentUI5.css', js:'js/componentUI5.js', obj:'ComponentUI5'},
-    black:   {html:'components/componentUI6.html', css:'css/componentUI6.css', js:'js/componentUI6.js', obj:'ComponentUI6'},
-    setting: {html:'components/setting.html',       css:'css/setting.css',       js:'js/setting.js',       obj:'SettingPanel'}
+    white:   {html:'components/panels/componentUI1.html', css:'css/components/componentUI1.css', js:'js/components/componentUI1.js', obj:'ComponentUI1'},
+    green:   {html:'components/panels/componentUI2.html', css:'css/components/componentUI2.css', js:'js/components/componentUI2.js', obj:'ComponentUI2'},
+    orange:  {html:'components/panels/componentUI3.html', css:'css/components/componentUI3.css', js:'js/components/componentUI3.js', obj:'ComponentUI3'},
+    red:     {html:'components/panels/componentUI4.html', css:'css/components/componentUI4.css', js:'js/components/componentUI4.js', obj:'ComponentUI4'},
+    purple:  {html:'components/panels/componentUI5.html', css:'css/components/componentUI5.css', js:'js/components/componentUI5.js', obj:'ComponentUI5'},
+    black:   {html:'components/panels/componentUI6.html', css:'css/components/componentUI6.css', js:'js/components/componentUI6.js', obj:'ComponentUI6'},
+    setting: {html:'components/setting/setting.html',       css:'css/components/setting.css',       js:'js/components/setting.js',       obj:'SettingPanel'}
 };
 
 //组件加载缓存
@@ -67,13 +67,8 @@ const loadedJs = {};
 
 //===== DOM元素引用 =====
 const homeLine = document.getElementById('homeLine');
-const costDom = document.getElementById('cost');
-const upgradeBtn = document.getElementById('upgradeBtn');
 const logoSpin = document.querySelector('.logo-spin');
 const logoText = document.querySelector('.logo-text');
-const termOut = document.getElementById('termOut');
-const termScrollbar = document.getElementById('termScrollbar');
-let termScrollbarTimer = null;
 const panelTitle = document.getElementById('panelTitle');
 const normalView = document.getElementById('normalView');
 const homeContent = document.getElementById('homeContent');
@@ -196,203 +191,13 @@ window.applyTitleOverlay = applyTitleOverlay;
 // 供设置面板保存后立即同步运行时配置
 window.reloadSettings = loadSettings;
 
-//===== 底部终端：运行日志 + 按键记录（默认关闭，/keylog on 开启） =====
-let keylogEnabled = false;   // 按键记录开关
-let currentKeyLine = null;   // 当前按键记录行
-
-//特殊键 → 中文昵称（空格包裹）
-const KEY_NAMES = {
-    ' ': ' 空格 ',
-    'Backspace': ' 退格 ',
-    'Tab': ' 制表 ',
-    'Shift': ' 上档 ',
-    'Control': ' 控制 ',
-    'Alt': ' 替换 ',
-    'CapsLock': ' 大写 ',
-    'Escape': ' 退出 ',
-    'PageUp': ' 上翻 ',
-    'PageDown': ' 下翻 ',
-    'End': ' 结尾 ',
-    'Home': ' 开头 ',
-    'ArrowLeft': ' 左移 ',
-    'ArrowRight': ' 右移 ',
-    'ArrowUp': ' 上移 ',
-    'ArrowDown': ' 下移 ',
-    'Insert': ' 插入 ',
-    'Delete': ' 删除 '
-};
-for(let i = 1; i <= 12; i++){
-    KEY_NAMES['F' + i] = ' F' + i + ' ';
-}
-
-//修饰键本身（单独按下时按普通键记录，不作为组合键）
-const MOD_KEYS = {'Control':1, 'Alt':1, 'Shift':1, 'Meta':1};
-
-//组合键名称：如 Ctrl+C / Ctrl+Shift+V / Alt+制表。仅Shift+可打印字符视为大小写，不构成组合键。
-function keyComboName(e){
-    if(MOD_KEYS[e.key]) return null;   // 单独修饰键按下
-    const hasCtrlAltMeta = e.ctrlKey || e.altKey || e.metaKey;
-    if(!hasCtrlAltMeta && !e.shiftKey) return null;
-    if(!hasCtrlAltMeta && e.shiftKey && e.key.length === 1 && !KEY_NAMES[e.key]) return null;   // Shift+字母=大写，非组合
-    const mods = [];
-    if(e.ctrlKey) mods.push('Ctrl');
-    if(e.altKey) mods.push('Alt');
-    if(e.shiftKey) mods.push('Shift');
-    if(e.metaKey) mods.push('Win');
-    const k = e.key;
-    let main;
-    if(k === 'Enter') main = '回车';
-    else if(KEY_NAMES[k]) main = KEY_NAMES[k].trim();
-    else if(k.length === 1) main = k.toUpperCase();
-    else main = k;
-    return mods.join('+') + '+' + main;
-}
-
-//终端输出上限：最多1000行
-const TERM_MAX_LINES = 1000;
-
-//超出上限时移除最旧行
-function trimTerminal(){
-    while(termOut && termOut.children.length > TERM_MAX_LINES){
-        termOut.removeChild(termOut.firstChild);
-    }
-}
-
-//迷你滑动指示条：隐藏原生滚动条，滑动时出现，空闲淡化隐藏（与脚本工具一致）
-function updateTermScrollbar(){
-    if(!termOut || !termScrollbar) return;
-    const sh = termOut.scrollHeight, ch = termOut.clientHeight;
-    if(sh <= ch + 1){
-        termScrollbar.style.display = 'none';
-        return;
-    }
-    termScrollbar.style.display = 'block';
-    const ratio = ch / sh;
-    const h = Math.max(20, Math.round(ratio * ch));
-    const maxTop = ch - h;
-    const top = maxTop > 0 ? (termOut.scrollTop / (sh - ch)) * maxTop : 0;
-    termScrollbar.style.height = h + 'px';
-    termScrollbar.style.top = top + 'px';
-    termScrollbar.classList.add('show');
-    clearTimeout(termScrollbarTimer);
-    termScrollbarTimer = setTimeout(function(){
-        termScrollbar.classList.remove('show');
-    }, 800);
-}
-
-//追加一行终端输出（日志/命令各自成行，不会与按键记录混行）
-function appendTermLine(cls, text){
-    const div = document.createElement('div');
-    div.className = 'term-line ' + cls;
-    div.innerText = text;
-    termOut.appendChild(div);
-    currentKeyLine = null; // 新行之后按键记录另起一行
-    trimTerminal();
-    termOut.scrollTop = termOut.scrollHeight;
-    updateTermScrollbar();
-}
-
-//按键记录：同一行内累积，回车结束当前行另起一行
-function appendKeyRecord(text, endLine){
-    if(!keylogEnabled) return;
-    if(!currentKeyLine || !termOut.contains(currentKeyLine)){
-        currentKeyLine = document.createElement('div');
-        currentKeyLine.className = 'term-line term-key';
-        termOut.appendChild(currentKeyLine);
-    }
-    currentKeyLine.innerText += text;
-    if(endLine){
-        currentKeyLine = null;
-    }
-    trimTerminal();
-    termOut.scrollTop = termOut.scrollHeight;
-    updateTermScrollbar();
-}
-
-//===== 日志 =====
+//===== 终端模块代理（terminal.js 提供实际实现，此处仅作占位/转发） =====
+// terminal.js 在 base.js 之后加载，会覆盖 window.consoleWebAddLog；若 terminal.js 未加载则降级为空操作
 function addLog(text){
-    appendTermLine('term-log', `[${new Date().toLocaleTimeString()}] ${text}`);
+    if(window.consoleWebAddLog) window.consoleWebAddLog(text);
 }
 
-//判断事件是否发生在底部终端内（终端自身的输入/点按不计入按键记录）
-function isInsideTerminal(el){
-    return !!(el && el.closest && el.closest('.side-bottom'));
-}
-
-//按键记录：回车 → "回车 ┘"+换行；组合键（Ctrl+C 等）→ "Ctrl+C"；特殊键用中文昵称；其余用自身字符
-document.addEventListener('keydown', function(e){
-    if(!keylogEnabled) return;
-    if(isInsideTerminal(e.target)) return;
-    if(e.repeat) return;
-    // 跳过中文输入法中间态，中文整词在compositionend记录
-    if(e.isComposing || e.key === 'Process') return;
-    const combo = keyComboName(e);
-    if(combo){
-        appendKeyRecord(combo, false);
-        return;
-    }
-    if(e.key === 'Enter'){
-        appendKeyRecord('回车 ┘', true);
-        return;
-    }
-    if(Object.prototype.hasOwnProperty.call(KEY_NAMES, e.key)){
-        appendKeyRecord(KEY_NAMES[e.key], false);
-        return;
-    }
-    appendKeyRecord(e.key.length === 1 ? e.key : (' ' + e.key + ' '), false);
-});
-
-//中文输入法整词记录
-document.addEventListener('compositionend', function(e){
-    if(!keylogEnabled) return;
-    if(isInsideTerminal(e.target)) return;
-    if(e.data) appendKeyRecord(e.data, false);
-});
-
-//鼠标记录：左键 → "┌左键"，右键 → "右键┐"
-document.addEventListener('mousedown', function(e){
-    if(!keylogEnabled) return;
-    if(isInsideTerminal(e.target)) return;
-    if(e.button === 0) appendKeyRecord('┌左键', false);
-    else if(e.button === 2) appendKeyRecord('右键┐', false);
-});
-
-//===== 终端命令输入 =====
-const termInput = document.getElementById('termInput');
-if(termInput){
-    termInput.addEventListener('keydown', function(e){
-        if(e.key === 'Enter'){
-            e.preventDefault();
-            const cmd = termInput.value.trim();
-            termInput.value = '';
-            if(cmd) handleCommand(cmd);
-        }
-    });
-}
-
-function handleCommand(cmd){
-    if(window.ScriptTool && window.ScriptTool.recordCommand) window.ScriptTool.recordCommand(cmd);
-    appendTermLine('term-cmd', '> ' + cmd);
-    if(cmd === '/keylog on'){
-        keylogEnabled = true;
-        addLog('按键记录已开启');
-    }else if(cmd === '/keylog off'){
-        keylogEnabled = false;
-        currentKeyLine = null;
-        addLog('按键记录已关闭');
-    }else{
-        addLog('未知命令：' + cmd);
-    }
-}
-
-//终端滚动时更新迷你滑动指示条
-if(termOut){
-    termOut.addEventListener('scroll', updateTermScrollbar);
-    updateTermScrollbar();
-}
-// 暴露宿主钩子给独立脚本工具使用
-window.consoleWebAddLog = addLog;
-window.consoleWebHandleCommand = handleCommand;
+//===== 占位：终端模块已迁移至 terminal.js =====
 
 //===== 数字格式化：大数字用科学计数法 =====
 function formatNumber(n){
@@ -411,21 +216,17 @@ function renderResource(){
     if(homeLine) homeLine.innerText = line;
     miniCount.innerText = formatNumber(count);
     miniPerSec.innerText = formatNumber(lastSecondGain);
-    updateLogoSpeed();
 }
 
-//===== logo动画速度：随资源倍率(perSecond)加速，上限1万倍 =====
-function updateLogoSpeed(){
-    const factor = Math.min(perSecond, 10000);
-    const spinDur = (10 / factor) + 's';
-    const breatheDur = (3 / factor) + 's';
-    if(logoSpin && logoSpin.style.animationDuration !== spinDur){
-        logoSpin.style.animationDuration = spinDur;
-    }
-    if(logoText && logoText.style.animationDuration !== breatheDur){
-        logoText.style.animationDuration = breatheDur;
-    }
+//===== logo动画开关：默认无动画，/logotest on 开启，/logotest off 关闭 =====
+let logoTestEnabled = false;
+function setLogoAnimation(on){
+    logoTestEnabled = on;
+    if(logoSpin) logoSpin.style.animationPlayState = on ? 'running' : 'paused';
+    if(logoText) logoText.style.animationPlayState = on ? 'running' : 'paused';
 }
+// 暴露给 terminal.js 的 /logotest 命令调用
+window.setLogoAnimation = setLogoAnimation;
 
 function gameLoop(now){
     const delta = now - lastFrameTime;
@@ -447,20 +248,7 @@ setInterval(function(){
     }
 }, 1000);
 
-//===== 升级逻辑（升级模块暂空置，保留代码待后续接入） =====
-if(upgradeBtn){
-    upgradeBtn.onclick = ()=>{
-        if(count >= cost){
-            count -= cost;
-            perSecond *= 1.5;
-            cost = Math.floor(cost * 1.8);
-            if(costDom) costDom.innerText = cost;
-            addLog("采集模块已完成升级");
-        }else{
-            addLog("资源不足，等待采集完成");
-        }
-    };
-}
+//===== 升级逻辑已迁移至 js/core/index/upgrade.js =====
 
 //===== 老板键伪装切换 =====
 function toggleHide(){
@@ -619,4 +407,7 @@ loadSettings();
 checkViewportSize();
 initTabStatus();
 updateLogoColor('home');
-addLog("系统初始化成功，后台任务开始运行");
+
+//===== 弹窗栏挂载系统已迁移至 js/core/mount.js（与 base.js 同级）=====
+// 挂载组件注册、布局配置、动态加载、右键菜单等逻辑均由 mount.js 统一管理。
+// 首页只需引入 mount.js，它会自动加载终端、脚本工具等挂载组件。

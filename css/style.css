@@ -1,3 +1,6 @@
+:root{
+    --logo-color: #38bdf8;
+}
 *{
     margin: 0;
     padding: 0;
@@ -138,6 +141,8 @@ html, body, .container, .log, .side-inner{
     justify-content:center;
     transition: opacity 0.22s ease;
     font-size:12px;
+    line-height:1;
+    color:#e2e8f0;
 }
 /* 拉伸手柄：位于面板内侧边缘，拖动调整抽屉尺寸（保持吸附浏览器边缘） */
 .side-resize{
@@ -166,12 +171,12 @@ html, body, .container, .log, .side-inner{
 .side-top .side-resize{ bottom:0; }
 .side-bottom .side-resize{ top:0; }
 
-/* ---左侧抽屉：脚本录制面板，占满主窗口高度，默认最小宽度200px（可拖动拉伸） --- */
+/* ---左侧抽屉：脚本录制面板，占满主窗口高度，默认最小宽度140px（可拖动拉伸） --- */
 .side-left{
     top:0;
     left:0;
     height:100%;
-    width:200px;
+    width:140px;
 }
 .side-left .side-tab{
     top:50%;
@@ -193,12 +198,12 @@ html, body, .container, .log, .side-inner{
     transform: translateX(0%);
 }
 
-/* ---右侧抽屉（默认最小宽度140px）--- */
+/* ---右侧抽屉（默认最小宽度200px）--- */
 .side-right{
     top:0;
     right:0;
     height:100%;
-    width:140px;
+    width:200px;
 }
 .side-right .side-tab{
     top:50%;
@@ -229,10 +234,10 @@ html, body, .container, .log, .side-inner{
 }
 .side-top .side-tab{
     left:50%;
-    bottom:-16px;         /* 延伸出面板下边缘，收起时贴在窗口上边缘 */
+    bottom:-20px;         /* 延伸出面板下边缘，收起时贴在窗口上边缘 */
     transform: translateX(-50%);
     width:80px;
-    height:16px;
+    height:20px;
     border-radius: 0 0 6px 6px;
 }
 .side-top .side-panel{
@@ -255,10 +260,10 @@ html, body, .container, .log, .side-inner{
 }
 .side-bottom .side-tab{
     left:50%;
-    top:-16px;            /* 延伸出面板上边缘，收起时贴在窗口下边缘 */
+    top:-20px;            /* 延伸出面板上边缘，收起时贴在窗口下边缘 */
     transform: translateX(-50%);
     width:80px;
-    height:16px;
+    height:20px;
     border-radius: 6px 6px 0 0;
 }
 .side-bottom .side-panel{
@@ -332,6 +337,10 @@ html, body, .container, .log, .side-inner{
 .term-line.term-cmd{
     color:#4ade80;
 }
+/* 命令回复行：白色文字，无背景色（区别于带背景的系统日志） */
+.term-line.term-reply{
+    color:#ffffff;
+}
 /* 按键记录行 */
 .term-line.term-key{
     color:#e2e8f0;
@@ -340,6 +349,15 @@ html, body, .container, .log, .side-inner{
     margin-top:8px;
     display:flex;
     gap:6px;
+    align-items:center;
+}
+/* 命令提示符：[user@host 目录]$ */
+.term-prompt{
+    flex:none;
+    font-size:13px;
+    color:#4ade80;
+    white-space:nowrap;
+    user-select:none;
 }
 #termInput{
     flex:1;
@@ -356,11 +374,21 @@ html, body, .container, .log, .side-inner{
 #termInput:focus{ border-color:#2563eb; }
 #termInput::placeholder{ color:#64748b; }
 
-/* ========= 左侧面板：脚本工具（scriptTool.js 注入自身样式） ========= */
-.side-left .side-inner{
+/* ========= 弹窗栏工具填充：任意边挂载的工具容器撑满 side-inner ========= */
+.side-left .side-inner,
+.side-top .side-inner{
     display:flex;
     flex-direction:column;
 }
+.side-inner > #termPanel,
+.side-inner > #scriptToolRoot{
+    flex:1;
+    min-height:0;
+    min-width:0;
+    width:100%;
+    height:100%;
+}
+#termPanel{display:flex;flex-direction:column;}
 
 /* 透明度交互规则 */
 /* 收起状态：完全透明，hover才显现 */
@@ -376,6 +404,11 @@ html, body, .container, .log, .side-inner{
 }
 .side-wrap.open .side-tab:hover{
     opacity:1;
+}
+/* 空弹窗栏：标签弱化提示 */
+.side-wrap.side-empty .side-tab{
+    background:#334155;
+    color:#64748b;
 }
 
 /* ========= 标题栏与标签按钮组 ========= */
@@ -420,9 +453,11 @@ html, body, .container, .log, .side-inner{
     color: var(--logo-color, #38bdf8);
     transform-origin: center;
     animation: logoBreathe 3s ease-in-out infinite;
+    animation-play-state: paused;
 }
 .logo-spin{
     animation: logoSpin 10s linear infinite;
+    animation-play-state: paused;
     display:flex;
     align-items:center;
     justify-content:center;

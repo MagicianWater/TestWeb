@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器运行监控</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div id="rootViewport">
+    <!-- 小尺寸降级 -->
+    <div id="miniView" class="mini-view">
+        <div>词元：<span id="miniCount">0</span></div>
+        <div>每秒：<span id="miniPerSec">1</span></div>
+    </div>
+    <!-- 主窗口 -->
+    <div id="mainWindow" class="main-window">
+        <!-- 四边抽屉 -->
+        <div class="side-wrap side-left">
+            <div class="side-panel">
+                <div class="side-tab" data-side="left" data-st-tab data-st-side="left">☰</div>
+                <div class="side-inner">左侧边栏占位</div>
+                <div class="side-resize" data-side="left" title="拖动调整宽度"></div>
+            </div>
+        </div>
+        <div class="side-wrap side-right">
+            <div class="side-panel">
+                <div class="side-tab" data-side="right" data-st-tab data-st-side="right">☰</div>
+                <div class="side-inner"><div id="scriptToolRoot"></div></div>
+                <div class="side-resize" data-side="right" title="拖动调整宽度"></div>
+            </div>
+        </div>
+        <div class="side-wrap side-top">
+            <div class="side-panel">
+                <div class="side-tab" data-side="top" data-st-tab data-st-side="top">☰</div>
+                <div class="side-inner">上边栏占位</div>
+                <div class="side-resize" data-side="top" title="拖动调整高度"></div>
+            </div>
+        </div>
+        <div class="side-wrap side-bottom">
+            <div class="side-panel">
+                <div class="side-tab" data-side="bottom" data-st-tab data-st-side="bottom">☰</div>
+                <div class="side-inner" data-st-ignore>
+                    <div id="termPanel">
+                        <h3 style="margin-bottom:8px;font-size:15px;">终端</h3>
+                        <div class="term-out-wrap" id="termOutWrap">
+                            <div id="termOut"></div>
+                            <div id="termScrollbar"></div>
+                        </div>
+                        <div class="term-input-row">
+                            <span class="term-prompt" id="termPrompt">[user@host /]$</span>
+                            <input type="text" id="termInput" placeholder="输入命令，如 /ls 或 /help" autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                </div>
+                <div class="side-resize" data-side="bottom" title="拖动调整高度"></div>
+            </div>
+        </div>
+
+        <!-- 中间内容区 -->
+        <div id="mainContent">
+            <!-- 正常界面：title-bar + 首页内容 + 组件内容 -->
+            <div id="normalView" class="container">
+                <!-- title-bar 只在首页渲染，与内容同级 -->
+                <div class="title-bar title-bar-tabbed">
+                    <div class="logo-box">
+                        <div class="logo-spin">
+                            <span class="logo-text">logo</span>
+                        </div>
+                    </div>
+                    <h1 id="panelTitle">系统资源监控面板</h1>
+                    <div class="tab-group">
+                        <button class="tab-btn tab-home active" data-color="home">视界</button>
+                        <button class="tab-btn tab-white" data-color="white">白色</button>
+                        <button class="tab-btn tab-green" data-color="green">绿色</button>
+                        <button class="tab-btn tab-orange" data-color="orange">橙色</button>
+                        <button class="tab-btn tab-red" data-color="red">红色</button>
+                        <button class="tab-btn tab-purple" data-color="purple">紫色</button>
+                        <button class="tab-btn tab-black" data-color="black">黑色</button>
+                        <button class="tab-btn tab-setting" data-color="setting">设置</button>
+                    </div>
+                </div>
+
+                <!-- 首页默认内容（视界） -->
+                <div id="homeContent">
+                    <div class="card">
+                        <p id="homeLine" class="home-line">词元：0.00（+10.00/s）</p>
+                    </div>
+                    <!-- 代码雨动画窗口（暂未启用，待后续接入） -->
+                    <!-- 升级模块（待开发） -->
+                    <div class="card" id="upgradeModule"></div>
+                </div>
+
+                <!-- 组件内容注入区 -->
+                <div id="componentContent" style="display:none;"></div>
+            </div>
+
+            <!-- 老板键伪装界面 -->
+            <div id="workPanel" class="container" style="display:none;">
+                <h1>员工绩效统计表 - 2026年8月</h1>
+                <div class="card">
+                    <h3>月度数据汇总</h3>
+                    <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                        <tr style="border-bottom:1px solid #64748b;">
+                            <td style="padding:8px;">部门</td>
+                            <td style="padding:8px;">完成任务数</td>
+                            <td style="padding:8px;">完成率</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #64748b;">
+                            <td style="padding:8px;">研发一部</td>
+                            <td style="padding:8px;">148</td>
+                            <td style="padding:8px;">96.2%</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #64748b;">
+                            <td style="padding:8px;">研发二部</td>
+                            <td style="padding:8px;">132</td>
+                            <td style="padding:8px;">91.7%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;">运维组</td>
+                            <td style="padding:8px;">176</td>
+                            <td style="padding:8px;">98.5%</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>待办清单</h3>
+                    <ul style="padding-left:20px;margin-top:10px;line-height:2;">
+                        <li>核对本周项目进度报表</li>
+                        <li>整理服务器巡检记录</li>
+                        <li>提交下周工作计划</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="./js/core/base.js?v=20260902"></script>           <!-- 核心框架：资源循环、四边抽屉切换/拉伸、标签切换（挂载系统已迁移至 mount.js） -->
+<script src="./js/core/save.js?v=20260901"></script>           <!-- 存档系统：localStorage 缓存 + JSON 导入导出，供各模块注册持久化字段 -->
+<script src="./js/core/index/upgrade.js?v=20260901"></script>   <!-- 升级模块：采集速度升级，渲染并驱动首页 #upgradeModule 卡片 -->
+<script src="./js/core/mount.js?v=20260902"></script>     <!-- 挂载管理器：统一注册并动态加载终端、脚本工具等可挂载组件，管理弹窗栏布局 -->
+
+<!-- 终端、脚本工具由 mount.js 动态加载，无需在此单独引入 -->
+<!-- 特效脚本（scene3d/codeRain）暂不挂载，按需取消注释 -->
+<!-- <script src="./js/effect/scene3d.js?v=20260904"></script> -->
+<!-- <script src="./js/effect/codeRain.js?v=20260901"></script> -->
+</body>
+</html>
