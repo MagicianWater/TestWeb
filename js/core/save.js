@@ -162,5 +162,112 @@
         }
     };
 
+    //===== 自动存盘管理器（可配置周期 30s~5min，倒计时显示 + 存盘弹窗） =====
+    const AUTOSAVE_LS_KEY = 'consoleWeb_autosave_interval';
+    const MIN_INTERVAL = 30;          // 最小 30 秒
+    const MAX_INTERVAL = 300;         // 最大 5 分钟
+    const DEFAULT_INTERVAL = 30;
+
+    let autoSaveInterval = DEFAULT_INTERVAL;
+    let autoSaveCountdown = autoSaveInterval;
+    let autoSaveTimer = null;
+    let countdownEl = null;
+    let toastEl = null;
+    let toastHideTimer = null;
+
+    function clampInterval(v){
+        v = Math.floor(Number(v));
+        if(isNaN(v)) return DEFAULT_INTERVAL;
+        if(v < MIN_INTERVAL) return MIN_INTERVAL;
+        if(v > MAX_INTERVAL) return MAX_INTERVAL;
+        return v;
+    }
+    function loadIntervalSetting(){
+        try{
+            const v = parseInt(localStorage.getItem(AUTOSAVE_LS_KEY), 10);
+            if(!isNaN(v)) autoSaveInterval = clampInterval(v);
+        }catch(e){}
+    }
+    function saveIntervalSetting(){
+        try{ localStorage.setItem(AUTOSAVE_LS_KEY, String(autoSaveInterval)); }catch(e){}
+    }
+
+    //创建倒计时与弹窗 DOM（动态注入，避免污染 index.html）
+    function ensureUI(){
+        if(!countdownEl){
+            countdownEl = document.createElement('div');
+            countdownEl.id = 'saveCountdown';
+            countdownEl.textContent = String(autoSaveCountdown);
+            document.body.appendChild(countdownEl);
+        }
+        if(!toastEl){
+            toastEl = document.createElement('div');
+            toastEl.id = 'saveToast';
+            toastEl.textContent = '存档已保存';
+            document.body.appendChild(toastEl);
+        }
+    }
+    function updateCountdownDisplay(){
+        if(countdownEl) countdownEl.textContent = String(Math.max(0, autoSaveCountdown));
+    }
+    function showToast(){
+        if(!toastEl) return;
+        toastEl.classList.add('show');
+        if(toastHideTimer) clearTimeout(toastHideTimer);
+        toastHideTimer = setTimeout(function(){
+            toastEl.classList.remove('show');
+        }, 1500);
+    }
+    function doSave(reason){
+        try{
+            GameSave._flushToStorage();
+            showToast();
+            if(typeof window.addLog === 'function') window.addLog('存档已自动保存');
+        }catch(e){}
+    }
+    function tick(){
+        autoSaveCountdown--;
+        if(autoSaveCountdown <= 0){
+            doSave('定时');
+            autoSaveCountdown = autoSaveInterval;
+        }
+        updateCountdownDisplay();
+    }
+
+    GameSave.AutoSave = {
+        //启动自动存盘（恢复设置 → 创建 UI → 启动定时器）
+        start: function(){
+            loadIntervalSetting();
+            autoSaveCountdown = autoSaveInterval;
+            ensureUI();
+            updateCountdownDisplay();
+            if(autoSaveTimer) clearInterval(autoSaveTimer);
+            autoSaveTimer = setInterval(tick, 1000);
+            document.addEventListener('visibilitychange', function(){
+                if(document.visibilityState === 'hidden'){
+                    doSave('离开页面');
+                    autoSaveCountdown = autoSaveInterval;
+                    updateCountdownDisplay();
+                }
+            });
+        },
+        //设置存盘周期（秒），自动钳制到 [30, 300] 并持久化
+        setInterval: function(seconds){
+            autoSaveInterval = clampInterval(seconds);
+            saveIntervalSetting();
+            autoSaveCountdown = autoSaveInterval;
+            updateCountdownDisplay();
+        },
+        getInterval: function(){ return autoSaveInterval; },
+        getMinInterval: function(){ return MIN_INTERVAL; },
+        getMaxInterval: function(){ return MAX_INTERVAL; },
+        //立即存盘一次（手动触发）
+        saveNow: function(){
+            doSave('手动');
+            autoSaveCountdown = autoSaveInterval;
+            updateCountdownDisplay();
+        }
+    };
+
     window.GameSave = GameSave;
 })();
