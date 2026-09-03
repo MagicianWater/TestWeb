@@ -78,6 +78,7 @@
                         <button class="tab-btn tab-purple" data-color="purple">紫色</button>
                         <button class="tab-btn tab-black" data-color="black">黑色</button>
                         <button class="tab-btn tab-setting" data-color="setting">设置</button>
+                        <button class="tab-btn tab-account" data-color="account">账号</button>
                     </div>
                 </div>
 
@@ -135,8 +136,10 @@
         </div>
     </div>
 </div>
+<script src="./js/lib/supabase.min.js?v=20260902"></script>   <!-- Supabase JS SDK（自托管 UMD 构建） -->
+<script src="./js/core/supabase.js?v=20260902"></script>       <!-- Supabase 客户端封装：统一连接入口，供各模块使用 -->
+<script src="./js/core/save.js?v=20260901"></script>           <!-- 存档系统：localStorage 缓存 + JSON 导入导出，供各模块注册持久化字段（须在 base.js 之前加载） -->
 <script src="./js/core/base.js?v=20260902"></script>           <!-- 核心框架：资源循环、四边抽屉切换/拉伸、标签切换（挂载系统已迁移至 mount.js） -->
-<script src="./js/core/save.js?v=20260901"></script>           <!-- 存档系统：localStorage 缓存 + JSON 导入导出，供各模块注册持久化字段 -->
 <script src="./js/core/index/upgrade.js?v=20260901"></script>   <!-- 升级模块：采集速度升级，渲染并驱动首页 #upgradeModule 卡片 -->
 <script src="./js/core/mount.js?v=20260902"></script>     <!-- 挂载管理器：统一注册并动态加载终端、脚本工具等可挂载组件，管理弹窗栏布局 -->
 
