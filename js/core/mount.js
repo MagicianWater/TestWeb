@@ -112,6 +112,8 @@
         });
         saveSideLayout();
         applySideLayout();
+        // 派发变更事件，便于设置面板等外部界面实时同步
+        window.dispatchEvent(new CustomEvent('sideLayoutChange'));
     };
     window.getSideWidgetList = function(){
         return SIDE_WIDGETS.map(function(w){ return { id:w.id, name:w.name }; });
@@ -157,6 +159,8 @@
     window.setFloatWidgetEnabled = function(id, enabled){
         const w = FLOAT_WIDGETS.find(function(x){ return x.id === id; });
         if(w) w.enabled = !!enabled;
+        // 启用状态变化会影响管理列表构成，派发事件通知设置面板
+        window.dispatchEvent(new CustomEvent('floatStateChange'));
     };
     // 统一组件清单（供设置面板"功能管理"使用）——仅含已启用的浮动窗
     window.getAllWidgets = function(){
@@ -244,6 +248,10 @@
                 item.onclick = function(e){
                     e.stopPropagation();
                     const cfg = window.getSideLayout();
+                    // 先清除该工具原有的挂载位置（若有），实现"替换"语义：
+                    // 选中的工具会从原弹窗栏下架，挂到当前右键的弹窗栏；
+                    // 原本挂在此处的工具则被替换下架（移入隐藏仓库）。
+                    SIDE_ORDER.forEach(function(s){ if(cfg[s] === w.id) cfg[s] = null; });
                     cfg[side] = w.id;
                     window.setSideLayout(cfg);
                     closeMenu();
