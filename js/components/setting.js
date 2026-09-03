@@ -179,7 +179,6 @@ var SettingPanel = {
                     cfg[s.dataset.side] = s.value || null;
                 });
                 if(window.setSideLayout) window.setSideLayout(cfg);
-                self.renderWidgetManager();
             };
         }
     },
@@ -248,12 +247,7 @@ var SettingPanel = {
                 btn.className = 'wm-btn' + (w.open ? ' wm-on' : '');
                 btn.textContent = w.open ? '关闭' : '打开';
                 btn.onclick = function(){
-                    const next = !w.open;
-                    if(window.setFloatOpen) window.setFloatOpen(w.id, next);
-                    btn.textContent = next ? '关闭' : '打开';
-                    btn.classList.toggle('wm-on', next);
-                    desc.textContent = next ? '浮动窗·已打开' : '浮动窗·已关闭';
-                    w.open = next;
+                    if(window.setFloatOpen) window.setFloatOpen(w.id, !w.open);
                 };
                 ctrl.appendChild(btn);
             }else{
@@ -272,3 +266,23 @@ var SettingPanel = {
         if(tip) tip.textContent = msg;
     }
 };
+
+//===== 监听挂载系统变更，实时同步设置界面 =====
+// mount.js 在布局/浮动窗状态变更后派发 sideLayoutChange / floatStateChange 事件；
+// 此处监听并重新渲染，使右键标签挂载等外部操作即时反映到设置界面。
+// 面板未打开时 renderSideLayout/renderWidgetManager 会因容器缺失直接返回，无副作用。
+(function(){
+    if(window.__settingMountSyncBound) return;
+    window.__settingMountSyncBound = true;
+    window.addEventListener('sideLayoutChange', function(){
+        if(window.SettingPanel){
+            SettingPanel.renderSideLayout();
+            SettingPanel.renderWidgetManager();
+        }
+    });
+    window.addEventListener('floatStateChange', function(){
+        if(window.SettingPanel){
+            SettingPanel.renderWidgetManager();
+        }
+    });
+})();
