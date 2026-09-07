@@ -67,7 +67,7 @@ const componentMap = {
     red:     {html:'components/panels/componentUI4.html', css:'css/components/componentUI4.css', js:'js/components/componentUI4.js', obj:'ComponentUI4'},
     purple:  {html:'components/panels/componentUI5.html', css:'css/components/componentUI5.css', js:'js/components/componentUI5.js', obj:'ComponentUI5'},
     black:   {html:'components/panels/componentUI6.html', css:'css/components/componentUI6.css', js:'js/components/componentUI6.js', obj:'ComponentUI6'},
-    setting: {html:'components/setting/setting.html',       css:'css/components/setting.css?v=20260907',       js:'js/components/setting.js?v=20260907',       obj:'SettingPanel'},
+    setting: {html:'components/setting/setting.html',       css:'css/components/setting.css?v=20260908',       js:'js/components/setting.js?v=20260908',       obj:'SettingPanel'},
     account: {html:'components/account/account.html',      css:'css/components/account.css',      js:'js/components/account.js',      obj:'AccountPanel'}
 };
 

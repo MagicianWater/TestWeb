@@ -10,8 +10,11 @@
 //   - MiniView.init() 获取 DOM 并首次检测尺寸
 //   - base.js 游戏循环 / resize 通过 window.MiniView 调用 update / checkSize
 
-// 小窗样式开关：开启后窗口边长 < 450 时显示降级小窗
+// 小窗样式开关：开启后窗口边长小于阈值时显示降级小窗
 var enableMiniView = true;
+// 小窗降级阈值（宽/高），由设置面板滑动条控制
+var miniViewMinW = 450;
+var miniViewMinH = 450;
 
 var MiniView = {
     // DOM 引用（init 时获取）
@@ -36,7 +39,7 @@ var MiniView = {
         if(!this._ready) return;
         var w = window.innerWidth;
         var h = window.innerHeight;
-        if(enableMiniView && (w < 450 || h < 450)){
+        if(enableMiniView && (w < miniViewMinW || h < miniViewMinH)){
             this._el.style.display = 'flex';
             this._mainEl.style.display = 'none';
         }else{
@@ -70,6 +73,14 @@ if(window.GameSave){
     GameSave.register('enableMiniView',
         function(){ return enableMiniView; },
         function(v){ if(typeof v === 'boolean') enableMiniView = v; }
+    );
+    GameSave.register('miniViewMinW',
+        function(){ return miniViewMinW; },
+        function(v){ if(typeof v === 'number') miniViewMinW = v; }
+    );
+    GameSave.register('miniViewMinH',
+        function(){ return miniViewMinH; },
+        function(v){ if(typeof v === 'number') miniViewMinH = v; }
     );
     GameSave.restoreFromStorage();
 }

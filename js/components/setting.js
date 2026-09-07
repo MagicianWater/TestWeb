@@ -554,10 +554,10 @@ var SettingPanel = {
     // 载入小窗样式（独立 CSS 文件）
     var link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = './css/miniView.css?v=20260907';
+    link.href = './css/miniView.css?v=20260908';
     document.head.appendChild(link);
     // 载入小窗脚本（独立 JS 文件，自初始化）
     var script = document.createElement('script');
-    script.src = './js/core/miniView.js?v=20260907';
+    script.src = './js/core/miniView.js?v=20260908';
     document.body.appendChild(script);
 })();
