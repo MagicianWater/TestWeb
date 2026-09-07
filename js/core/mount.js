@@ -15,6 +15,21 @@
 (function(){
     'use strict';
 
+    /* ============================================================
+     * 配置区（代码层面设置，集中管理便于调整）
+     * ============================================================ */
+
+    // 右键菜单隐藏的工具（不在菜单中显示，仅供内部/调试使用）
+    // 如需在右键菜单中显示某工具，从此数组移除其 id 即可
+    const HIDDEN_IN_MENU = ['terminal', 'devSQL', 'scriptTool'];
+
+    // 默认布局：所有工具均未挂载（显示"无"），用户通过右键菜单自行挂载
+    const DEFAULT_LAYOUT = { top:null, bottom:null, left:null, right:null };
+
+    /* ============================================================
+     * 组件注册表与常量
+     * ============================================================ */
+
     //===== 挂载组件注册表（统一注册入口） =====
     // 每项：{ id, sel, name, script }
     //   id     组件标识
@@ -23,12 +38,15 @@
     //   script 组件脚本路径，由本文件动态加载
     const SIDE_WIDGETS = [
         { id:'terminal',   sel:'#termPanel',     name:'终端',     script:'./js/core/terminal/terminal.js?v=20260902' },
-        { id:'scriptTool', sel:'#scriptToolRoot', name:'脚本工具', script:'./js/tools/scriptTool.js?v=20260902' }
+        { id:'scriptTool', sel:'#scriptToolRoot', name:'脚本工具', script:'./js/tools/scriptTool.js?v=20260902' },
+        // dev-SQL：开发者数据库查询工具（临时调试用，后期移除）
+        { id:'devSQL',     sel:'#devSQLRoot',     name:'dev-SQL',  script:'./js/tools/devSQL.js?v=20260903' },
+        // 聊天栏：全服公用聊天（登录后可发送，Realtime 实时推送）
+        { id:'chat',       sel:'#chatRoot',       name:'聊天',     script:'./js/core/chat/chat.js?v=20260906' }
     ];
 
     const SIDE_ORDER  = ['top','bottom','left','right'];
     const SIDE_LABELS = { top:'上方', bottom:'下方', left:'左侧', right:'右侧' };
-    const DEFAULT_LAYOUT = { top:null, bottom:'terminal', left:null, right:'scriptTool' };
     let sideLayout = Object.assign({}, DEFAULT_LAYOUT);
     let widgetDock = null;
 
@@ -48,6 +66,23 @@
             const w = detectSideWidget(inner);
             tab.textContent = w ? w.name : '无';
             wrap.classList.toggle('side-empty', !w);
+        });
+    }
+
+    //===== 标签状态控制：组件可主动设置自身挂载标签的视觉状态 =====
+    // state 取值：null/'' 清除，'running' 绿色呼吸，'accent' 紫色强调
+    // 仅作用于挂载了指定组件的弹窗栏标签
+    function setSideTabState(widgetId, state){
+        document.querySelectorAll('.side-wrap').forEach(function(wrap){
+            const inner = wrap.querySelector('.side-inner');
+            if(!inner) return;
+            const w = detectSideWidget(inner);
+            if(!w || w.id !== widgetId) return;
+            const tab = wrap.querySelector('.side-tab');
+            if(!tab) return;
+            tab.classList.remove('tab-running','tab-accent');
+            if(state === 'running') tab.classList.add('tab-running');
+            else if(state === 'accent') tab.classList.add('tab-accent');
         });
     }
 
@@ -96,6 +131,12 @@
             if(el && inner){ inner.appendChild(el); el.style.display = ''; }
         });
         updateSideTabs();
+        // 布局变化后清除所有标签状态类，由各组件在初始化/状态变化时重新设置
+        document.querySelectorAll('.side-tab.tab-running, .side-tab.tab-accent').forEach(function(tab){
+            tab.classList.remove('tab-running','tab-accent');
+        });
+        // 派发事件，通知各组件重新设置自身标签状态（容器已就位）
+        window.dispatchEvent(new CustomEvent('sideLayoutApplied'));
     }
 
     //===== 对外 API =====
@@ -120,6 +161,7 @@
     };
     window.SIDE_LABELS = SIDE_LABELS;
     window.updateSideTabs = updateSideTabs;
+    window.setSideTabState = setSideTabState;
 
     //===== 浮动窗组件注册表（仅浮动，不挂弹窗栏；通过各自 show/hide API 控制） =====
     // 注册项格式：{ id, sel, name, api:fn→返回组件对象, enabled:是否纳入管理（默认 false） }
@@ -225,7 +267,10 @@
             menuEl = document.createElement('div');
             menuEl.id = 'sideCtxMenu';
             const layout = window.getSideLayout();
-            const widgets = window.getSideWidgetList();
+            // 右键菜单隐藏的工具不在菜单中显示
+            const widgets = window.getSideWidgetList().filter(function(w){
+                return HIDDEN_IN_MENU.indexOf(w.id) < 0;
+            });
             const cur = layout[side];
             const noneItem = document.createElement('div');
             noneItem.className = 'sc-item' + (!cur ? ' active' : '');

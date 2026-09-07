@@ -1,4 +1,4 @@
-﻿//===== 游戏核心数据 =====
+//===== 游戏核心数据 =====
 let count = 0;
 let perSecond = 10; // 默认增长速度
 let cost = 10;
@@ -8,13 +8,19 @@ const RESOURCE_NAME = "词元";
 let isHide = false;
 const gameTitle = "服务器运行监控";
 const workTitle = "员工绩效统计表";
-//快捷键配置
-let hotKeyList = [];
+//快捷键配置：每项 { name, key, action }
+//  action: 'toggle' 切换显示/隐藏，'hide' 收起弹窗栏
+const DEFAULT_HOTKEYS = [
+    { name: "切换", key: "",    action: "toggle" },
+    { name: "收起", key: "NUM0", action: "hide"    }
+];
+let hotKeyList = DEFAULT_HOTKEYS.map(function(x){ return Object.assign({}, x); });
 let enableEscBackup = true;
+let enableNum0Backup = true;
 //标题遮挡：默认开启（悬停标题栏才显示标签）
 let disableTitleOcclusion = false;
 
-//标签解锁状态：首页、白色、设置默认开放
+//标签解锁状态：首页、白色、设置、账号默认开放
 const tabStatus = {
     home: true,
     white: true,
@@ -23,7 +29,8 @@ const tabStatus = {
     red: false,
     purple: false,
     black: false,
-    setting: true
+    setting: true,
+    account: true
 };
 
 //标签 → 面板标题
@@ -35,7 +42,8 @@ const panelTitles = {
     red: '红色面板',
     purple: '紫色面板',
     black: '黑色面板',
-    setting: '系统设置'
+    setting: '系统设置',
+    account: '账号中心'
 };
 
 //标签 → logo颜色（与标签hover纯色一致）
@@ -47,7 +55,8 @@ const logoColors = {
     red: '#ef4444',
     purple: '#a855f7',
     black: '#0a0a0a',
-    setting: '#2563eb'
+    setting: '#2563eb',
+    account: '#ec4899'
 };
 
 //标签 → 组件文件映射
@@ -58,7 +67,8 @@ const componentMap = {
     red:     {html:'components/panels/componentUI4.html', css:'css/components/componentUI4.css', js:'js/components/componentUI4.js', obj:'ComponentUI4'},
     purple:  {html:'components/panels/componentUI5.html', css:'css/components/componentUI5.css', js:'js/components/componentUI5.js', obj:'ComponentUI5'},
     black:   {html:'components/panels/componentUI6.html', css:'css/components/componentUI6.css', js:'js/components/componentUI6.js', obj:'ComponentUI6'},
-    setting: {html:'components/setting/setting.html',       css:'css/components/setting.css',       js:'js/components/setting.js',       obj:'SettingPanel'}
+    setting: {html:'components/setting/setting.html',       css:'css/components/setting.css?v=20260907',       js:'js/components/setting.js?v=20260907',       obj:'SettingPanel'},
+    account: {html:'components/account/account.html',      css:'css/components/account.css',      js:'js/components/account.js',      obj:'AccountPanel'}
 };
 
 //组件加载缓存
@@ -74,26 +84,16 @@ const normalView = document.getElementById('normalView');
 const homeContent = document.getElementById('homeContent');
 const componentContent = document.getElementById('componentContent');
 const workPanel = document.getElementById('workPanel');
-const miniView = document.getElementById('miniView');
-const miniCount = document.getElementById('miniCount');
-const miniPerSec = document.getElementById('miniPerSec');
-const mainWindow = document.getElementById('mainWindow');
 
 
-//===== 窗口尺寸检测 =====
-function checkViewportSize(){
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    if(w < 450 || h < 450){
-        miniView.style.display = 'flex';
-        mainWindow.style.display = 'none';
-    }else{
-        miniView.style.display = 'none';
-        mainWindow.style.display = 'block';
-    }
-}
+//===== 窗口尺寸检测（已迁移至 miniView.js，由 MiniView 模块独立管理） =====
 
 //===== 四边抽屉切换 =====
+// 初始化：确保所有弹窗栏默认收起（防止 CSS 过渡动画或缓存导致初始展开）
+document.querySelectorAll('.side-wrap').forEach(wrap=>{
+    wrap.classList.remove('open');
+    wrap.style.zIndex = 900;
+});
 document.querySelectorAll('.side-tab').forEach(tab=>{
     tab.addEventListener('click',()=>{
         const currentWrap = tab.closest('.side-wrap');
@@ -110,16 +110,16 @@ document.querySelectorAll('.side-tab').forEach(tab=>{
 });
 
 //===== 四边抽屉拉伸（保持吸附浏览器边缘，默认最小，尺寸持久化） =====
+// 尺寸持久化由 GameSave 统一管理，base.js 不再直接读写 localStorage。
 const SIDE_MIN = {left:200, right:140, top:110, bottom:170};
 const SIDE_MAX_RATIO = 0.9;
+let sideSizes = {};
 function loadSideSizes(){
-    let cfg = {};
-    try{ cfg = JSON.parse(localStorage.getItem('sideSizes') || '{}'); }catch(e){}
     ['left','right','top','bottom'].forEach(side=>{
         const wrap = document.querySelector('.side-' + side);
         if(!wrap) return;
         const key = (side === 'left' || side === 'right') ? 'width' : 'height';
-        const saved = parseFloat(cfg[side]);
+        const saved = parseFloat(sideSizes[side]);
         const container = wrap.offsetParent || wrap.parentElement || document.body;
         const maxSize = (key === 'width' ? container.clientWidth : container.clientHeight) * SIDE_MAX_RATIO;
         let size = (saved && saved >= SIDE_MIN[side]) ? saved : SIDE_MIN[side];
@@ -128,10 +128,8 @@ function loadSideSizes(){
     });
 }
 function saveSideSize(side, size){
-    let cfg = {};
-    try{ cfg = JSON.parse(localStorage.getItem('sideSizes') || '{}'); }catch(e){}
-    cfg[side] = Math.round(size);
-    try{ localStorage.setItem('sideSizes', JSON.stringify(cfg)); }catch(e){}
+    sideSizes[side] = Math.round(size);
+    if(window.GameSave) GameSave._flushToStorage();
 }
 document.querySelectorAll('.side-resize').forEach(handle=>{
     handle.addEventListener('mousedown', e=>{
@@ -169,15 +167,8 @@ document.querySelectorAll('.side-resize').forEach(handle=>{
 loadSideSizes();
 
 
-//===== 本地存储读取设置 =====
+//===== 设置同步：值由 GameSave 统一恢复到全局变量，此处仅同步运行时 UI =====
 function loadSettings(){
-    const save = localStorage.getItem("idleGameSettings");
-    if(save){
-        const cfg = JSON.parse(save);
-        hotKeyList = cfg.hotKeyList || [];
-        enableEscBackup = cfg.enableEscBackup ?? true;
-        disableTitleOcclusion = cfg.disableTitleOcclusion ?? false;
-    }
     applyTitleOverlay();
 }
 
@@ -214,8 +205,7 @@ let lastMeasureTime = performance.now();
 function renderResource(){
     const line = RESOURCE_NAME + "：" + formatNumber(count) + "（+" + formatNumber(lastSecondGain) + "/s）";
     if(homeLine) homeLine.innerText = line;
-    miniCount.innerText = formatNumber(count);
-    miniPerSec.innerText = formatNumber(lastSecondGain);
+    if(window.MiniView) MiniView.update(formatNumber(count), formatNumber(lastSecondGain));
 }
 
 //===== logo动画开关：默认无动画，/logotest on 开启，/logotest off 关闭 =====
@@ -261,6 +251,33 @@ function toggleHide(){
         normalView.style.display = 'block';
         workPanel.style.display = 'none';
         document.title = gameTitle;
+    }
+}
+
+//===== 收起所有已展开的弹窗栏 =====
+function collapseAllSidePanels(){
+    document.querySelectorAll('.side-wrap.open').forEach(wrap=>{
+        wrap.classList.remove('open');
+        wrap.style.zIndex = 900;
+    });
+}
+
+//===== 快捷键动作：收起弹窗栏（无展开则先弹底部栏再收起） =====
+function hideOnly(){
+    const opened = document.querySelectorAll('.side-wrap.open');
+    if(opened.length > 0){
+        collapseAllSidePanels();
+        return;
+    }
+    // 无展开：先弹出底部栏，0.3秒后收起
+    const bottom = document.querySelector('.side-bottom');
+    if(bottom){
+        bottom.classList.add('open');
+        bottom.style.zIndex = 1100;
+        setTimeout(function(){
+            bottom.classList.remove('open');
+            bottom.style.zIndex = 900;
+        }, 300);
     }
 }
 
@@ -375,38 +392,112 @@ function initTabStatus(){
     });
 }
 
-//===== 键盘监听（老板键） =====
+//===== 键盘监听（快捷键） =====
+// 统一按键名：小键盘按键识别为 NUM0~NUM9 等，避免 NumLock 状态影响
+function normalizeKey(e){
+    if(e.code && e.code.indexOf('Numpad') === 0){
+        return 'NUM' + e.code.slice(6);
+    }
+    return (typeof e.key === 'string') ? e.key.toUpperCase() : '';
+}
 document.addEventListener('keydown', function(e){
-    // 在老板键输入框录制快捷键时，不触发老板键
-    if(e.target && e.target.tagName === 'INPUT' && e.target.id === 'bossHotkeyInput') return;
+    // 在快捷键输入框录制时，不触发快捷键动作
+    if(e.target && e.target.tagName === 'INPUT' && e.target.classList.contains('hotkey-input')) return;
     let press = [];
     if(e.ctrlKey) press.push("Ctrl");
     if(e.altKey) press.push("Alt");
     if(e.shiftKey) press.push("Shift");
-    if(!["Control","Alt","Shift"].includes(e.key)){
-        press.push(e.key.toUpperCase());
+    const k = normalizeKey(e);
+    if(k && !["CONTROL","ALT","SHIFT"].includes(k)){
+        press.push(k);
     }
     const currentHot = press.join("+");
 
-    if(hotKeyList.includes(currentHot)){
+    // 遍历快捷键列表，匹配后按 action 分发
+    for(let i = 0; i < hotKeyList.length; i++){
+        const item = hotKeyList[i];
+        if(item.key && item.key === currentHot){
+            e.preventDefault();
+            if(item.action === 'hide') hideOnly();
+            else toggleHide();
+            return;
+        }
+    }
+    // 备用快捷键：ESC 切换、NUM0 收起（按键名与录制时一致）
+    if(enableEscBackup && k === 'ESCAPE'){
         e.preventDefault();
         toggleHide();
         return;
     }
-    if(e.key === 'Escape' && enableEscBackup){
+    if(enableNum0Backup && k === 'NUM0'){
         e.preventDefault();
-        toggleHide();
+        hideOnly();
+        return;
     }
 });
 
-//窗口大小变化
-window.addEventListener('resize', checkViewportSize);
+//窗口大小变化：交由 MiniView 模块检测
+window.addEventListener('resize', function(){ if(window.MiniView) MiniView.checkSize(); });
 
-//初始化
+//===== 持久化存档：统一注册到 GameSave，由 save.js 综合管理 =====
+// 所有需要持久化的字段（核心数据、设置项、抽屉尺寸）均在此注册，
+// 刷新后由 GameSave.restoreFromStorage() 一次性恢复，base.js 不再直接读写 localStorage。
+// 注意：save.js 已在 base.js 之前加载，GameSave 此时可用。
+if(window.GameSave){
+    //核心游戏数据
+    GameSave.register('count', function(){ return count; }, function(v){ if(typeof v === 'number') count = v; });
+    GameSave.register('perSecond', function(){ return perSecond; }, function(v){ if(typeof v === 'number') perSecond = v; });
+    GameSave.register('cost', function(){ return cost; }, function(v){ if(typeof v === 'number') cost = v; });
+    //设置项（原 idleGameSettings，现由 GameSave 统一管理）
+    GameSave.register('hotKeyList', function(){ return hotKeyList; }, function(v){
+        if(!Array.isArray(v)) return;
+        // 兼容旧格式：字符串数组 → 对象数组
+        var restored = v.map(function(item){
+            return typeof item === 'string'
+                ? { name:"切换", key:item, action:"toggle" }
+                : item;
+        });
+        // 以默认项为基础，用恢复数据覆盖同名项，保证默认快捷键始终存在
+        hotKeyList = DEFAULT_HOTKEYS.map(function(def){
+            var match = restored.find(function(r){ return r.name === def.name; });
+            return match ? Object.assign({}, def, match) : Object.assign({}, def);
+        });
+    });
+    GameSave.register('enableEscBackup', function(){ return enableEscBackup; }, function(v){ if(typeof v === 'boolean') enableEscBackup = v; });
+    GameSave.register('enableNum0Backup', function(){ return enableNum0Backup; }, function(v){ if(typeof v === 'boolean') enableNum0Backup = v; });
+    GameSave.register('disableTitleOcclusion', function(){ return disableTitleOcclusion; }, function(v){ if(typeof v === 'boolean') disableTitleOcclusion = v; });
+    //四边抽屉尺寸（原 sideSizes，现由 GameSave 统一管理）
+    GameSave.register('sideSizes', function(){ return sideSizes; }, function(v){ sideSizes = (v && typeof v === 'object') ? v : {}; loadSideSizes(); });
+    //一次性恢复所有字段
+    GameSave.restoreFromStorage();
+    //恢复后刷新升级卡片显示（若已渲染）
+    if(window.Upgrade && Upgrade.refresh) Upgrade.refresh();
+    //启动自动存盘管理器（可配置周期 30s~5min、倒计时显示、存盘弹窗）
+    GameSave.AutoSave.start();
+}
+
+//初始化（此时所有持久化字段已由 GameSave 恢复）
 loadSettings();
-checkViewportSize();
 initTabStatus();
 updateLogoColor('home');
+
+//===== 预载设置组件脚本 =====
+// 小窗样式（miniView）的 CSS/JS 交由 setting 组件负责 import（见 setting.js 末尾）。
+// 此处启动时预载 setting.js，使其立即载入 miniView，保证小窗降级在页面加载时即生效。
+// 标记 loadedJs['setting'] 避免点击"设置"标签时 loadComponent 重复载入；
+// 若用户在预载完成前已切到设置标签（HTML 已注入），则于预载完成后补执行 init。
+(function(){
+    if(loadedJs['setting']) return;
+    loadedJs['setting'] = true;
+    const s = document.createElement('script');
+    s.src = componentMap.setting.js;
+    s.onload = function(){
+        if(window.SettingPanel && document.getElementById('titleOverlayBtn')){
+            SettingPanel.init();
+        }
+    };
+    document.body.appendChild(s);
+})();
 
 //===== 弹窗栏挂载系统已迁移至 js/core/mount.js（与 base.js 同级）=====
 // 挂载组件注册、布局配置、动态加载、右键菜单等逻辑均由 mount.js 统一管理。

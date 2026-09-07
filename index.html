@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>服务器运行监控</title>
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/style.css?v=20260904">
+    <link rel="stylesheet" href="./css/components/chat.css?v=20260906">
 </head>
 <body>
 <div id="rootViewport">
-    <!-- 小尺寸降级 -->
-    <div id="miniView" class="mini-view">
+    <!-- 小尺寸降级（小窗样式由 setting 组件负责载入，默认隐藏避免未样式化闪烁） -->
+    <div id="miniView" class="mini-view" style="display:none">
         <div>词元：<span id="miniCount">0</span></div>
         <div>每秒：<span id="miniPerSec">1</span></div>
     </div>
@@ -52,6 +53,8 @@
                             <input type="text" id="termInput" placeholder="输入命令，如 /ls 或 /help" autocomplete="off" spellcheck="false">
                         </div>
                     </div>
+                    <!-- 聊天栏容器：由 mount.js 移动到对应弹窗栏，未挂载时隐藏 -->
+                    <div id="chatRoot"></div>
                 </div>
                 <div class="side-resize" data-side="bottom" title="拖动调整高度"></div>
             </div>
@@ -138,14 +141,18 @@
 </div>
 <script src="./js/lib/supabase.min.js?v=20260902"></script>   <!-- Supabase JS SDK（自托管 UMD 构建） -->
 <script src="./js/core/supabase.js?v=20260902"></script>       <!-- Supabase 客户端封装：统一连接入口，供各模块使用 -->
+
 <script src="./js/core/save.js?v=20260901"></script>           <!-- 存档系统：localStorage 缓存 + JSON 导入导出，供各模块注册持久化字段（须在 base.js 之前加载） -->
-<script src="./js/core/base.js?v=20260902"></script>           <!-- 核心框架：资源循环、四边抽屉切换/拉伸、标签切换（挂载系统已迁移至 mount.js） -->
+<script src="./js/core/base.js?v=20260907"></script>           <!-- 核心框架：资源循环、四边抽屉切换/拉伸、标签切换（挂载系统已迁移至 mount.js） -->
 <script src="./js/core/index/upgrade.js?v=20260901"></script>   <!-- 升级模块：采集速度升级，渲染并驱动首页 #upgradeModule 卡片 -->
-<script src="./js/core/mount.js?v=20260902"></script>     <!-- 挂载管理器：统一注册并动态加载终端、脚本工具等可挂载组件，管理弹窗栏布局 -->
+<script src="./js/core/mount.js?v=20260903"></script>     <!-- 挂载管理器：统一注册并动态加载终端、脚本工具等可挂载组件，管理弹窗栏布局 -->
 
 <!-- 终端、脚本工具由 mount.js 动态加载，无需在此单独引入 -->
 <!-- 特效脚本（scene3d/codeRain）暂不挂载，按需取消注释 -->
 <!-- <script src="./js/effect/scene3d.js?v=20260904"></script> -->
 <!-- <script src="./js/effect/codeRain.js?v=20260901"></script> -->
+
+<!-- dev-SQL 挂载点（开发者调试工具，后期移除） -->
+<div id="devSQLRoot"></div>
 </body>
 </html>

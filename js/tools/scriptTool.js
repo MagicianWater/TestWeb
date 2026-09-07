@@ -147,6 +147,10 @@
             '#scriptToolRoot .st-toast.show{opacity:1;}',
             '#scriptToolRoot.st-float.st-playing{border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.35),0 10px 30px rgba(0,0,0,.4);}',
             '#scriptToolRoot.st-float.st-paused{border-color:#f59e0b;box-shadow:0 0 0 1px rgba(245,158,11,.35),0 10px 30px rgba(0,0,0,.4);}',
+            // 弹窗栏标签状态：运行中绿色呼吸（由 setSideTabState('scriptTool','running') 触发）
+            '.side-tab.tab-running{color:#6ee7b7 !important;border-color:#22c55e !important;animation:sideTabBreathe 1.4s ease-in-out infinite;}',
+            '.side-wrap:not(.open) .side-tab.tab-running{opacity:1;}',
+            '@keyframes sideTabBreathe{0%,100%{background:rgba(34,197,94,.12);}50%{background:rgba(34,197,94,.4);}}',
             ''
         ].join('\n');
         (document.head || document.documentElement).appendChild(st);
@@ -723,6 +727,10 @@
         if(pausedBadge){
             pausedBadge.style.display = p ? 'inline-block' : 'none';
             pausedBadge.textContent = '暂停中 ' + p;
+        }
+        // 同步弹窗栏标签状态：有运行中脚本 → 绿色呼吸，否则清除
+        if(window.setSideTabState){
+            window.setSideTabState('scriptTool', n > 0 ? 'running' : null);
         }
         // 同步脚本列表：运行中呼吸 / 暂停中黄色 / 开关状态与运行一致 + 当前步骤编号
         if(libList){
@@ -1495,6 +1503,8 @@
         updateRecChip();
         updateRecBtn();
         initFloatPanel();
+        // 布局应用后（容器已就位）重新同步标签状态
+        window.addEventListener('sideLayoutApplied', updateRunsBadge);
         // 对外API
         window.ScriptTool = {
             recordCommand: recordCommand,
