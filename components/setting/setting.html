@@ -1,23 +1,41 @@
 <div class="card theme-accent">
-    <h3>老板快捷键设置</h3>
-    <p class="tip">点击输入框后按下快捷键组合，点击其他位置自动保存</p>
-    <input type="text" id="bossHotkeyInput" class="hotkey-input" placeholder="点击此处录制老板键" readonly>
-    <label>
-        <input type="checkbox" id="enableEsc"> 启用ESC备用老板键
-    </label>
+    <h3>快捷键设置</h3>
+    <div id="hotkeyList" class="hotkey-list"></div>
 </div>
 <div class="card theme-accent">
-    <h3>标题栏显示</h3>
-    <button id="titleOverlayBtn">关闭标题遮挡</button>
+    <h3>样式设置</h3>
+    <div class="toggle-row">
+        <span class="toggle-label">标题遮挡</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="titleOverlayBtn">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <div class="toggle-row">
+        <span class="toggle-label">小窗样式</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="miniViewBtn">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <div class="range-row">
+        <span class="range-label">宽度阈值</span>
+        <span class="range-value" id="miniViewWVal">450</span>
+        <input type="range" id="miniViewWRange" class="range-slider" min="0" max="450" value="450">
+    </div>
+    <div class="range-row">
+        <span class="range-label">高度阈值</span>
+        <span class="range-value" id="miniViewHVal">450</span>
+        <input type="range" id="miniViewHRange" class="range-slider" min="0" max="450" value="450">
+    </div>
 </div>
-<div class="card theme-accent">
-    <h3>快捷栏设置</h3>
-    <div id="sideLayoutCfg" class="side-layout-cfg"></div>
+<div class="card theme-accent card-collapsible">
+    <h3 class="card-toggle" data-target="sideLayoutCfg">快捷栏设置<span class="card-state">收起</span></h3>
+    <div id="sideLayoutCfg" class="side-layout-cfg card-body"></div>
 </div>
-<div class="card theme-accent">
-    <h3>功能与脚本管理</h3>
-    <p class="tip">管理所有已加载的工具与特效脚本，可开关浮动窗、查看挂载位置</p>
-    <div id="widgetMgr" class="widget-mgr"></div>
+<div class="card theme-accent card-collapsible">
+    <h3 class="card-toggle" data-target="widgetMgr">功能与脚本管理<span class="card-state">收起</span></h3>
+    <div id="widgetMgr" class="widget-mgr card-body"></div>
 </div>
 <div class="card theme-accent">
     <h3>存档管理</h3>

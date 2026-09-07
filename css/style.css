@@ -22,14 +22,7 @@ html,body{
     align-items:center;
     justify-content:center;
 }
-/* 极小窗口下的极简视图 <450×450 */
-.mini-view{
-    display:none;
-    text-align:center;
-    font-size:18px;
-    gap:8px;
-    flex-direction:column;
-}
+/* 小窗样式已迁移至 css/miniView.css（独立模块管理） */
 /* 主窗口：最小450*450，大于时随视口长宽扩容填满，不再强制正方形 */
 .main-window{
     position:relative;
@@ -39,10 +32,14 @@ html,body{
     min-height:450px;
     overflow:hidden;
 }
-/* 中间内容区 */
+/* 中间内容区：绝对定位填满主窗口，不受弹窗栏 absolute 兄弟元素影响 */
 #mainContent{
+    position:absolute;
+    top:0;
+    left:0;
     width:100%;
     height:100%;
+    z-index:1;
 }
 .container{
     width:100%;
@@ -381,7 +378,8 @@ html, body, .container, .log, .side-inner{
     flex-direction:column;
 }
 .side-inner > #termPanel,
-.side-inner > #scriptToolRoot{
+.side-inner > #scriptToolRoot,
+.side-inner > #chatRoot{
     flex:1;
     min-height:0;
     min-width:0;

@@ -1,13 +1,53 @@
 /* setting - 系统设置特有样式 */
 .theme-accent{border-left:4px solid #2563eb;padding-left:12px;}
 .card h3{color:#60a5fa;}
+
+/* 可折叠卡片：h3 可点击切换，右侧显示展开/收起状态 */
+.card-collapsible .card-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;}
+.card-collapsible .card-state{font-size:11px;color:#94a3b8;font-weight:400;flex:none;margin-left:8px;}
+.card-collapsible .card-body{overflow:hidden;transition:max-height .2s ease,opacity .15s ease,margin .15s ease;max-height:2000px;opacity:1;margin-top:8px;}
+.card-collapsible.collapsed .card-body{max-height:0;opacity:0;margin-top:0;}
+.card-collapsible.collapsed .card-state{color:#64748b;}
 label{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;margin-top:8px;}
 input[type="checkbox"]{width:16px;height:16px;cursor:pointer;}
 
 /* 提示文字 */
 .tip{font-size:12px;color:#94a3b8;margin:4px 0 8px;line-height:1.5;}
 
-/* 老板键输入框 */
+/* 快捷键列表 */
+.hotkey-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.hotkey-row{position:relative;display:flex;align-items:center;gap:8px;}
+.hotkey-row .hotkey-name{flex:none;width:42px;font-size:13px;color:#cbd5e1;}
+.hotkey-row .hotkey-input{flex:1;margin:0;}
+.hotkey-row .hotkey-check{flex:none;display:flex;align-items:center;cursor:pointer;}
+.hotkey-row .hotkey-check input{width:16px;height:16px;cursor:pointer;margin:0;}
+/* 冲突警告：输入框标黄（重复自定义键）、勾选框标黄（与默认键冲突） */
+.hotkey-input.ds-warn{border-color:#f59e0b;background:#422006;}
+.hotkey-check.ds-warn input{outline:2px solid #f59e0b;outline-offset:1px;}
+/* 悬停浮现说明文字（暂未启用，保留以备未来需要）
+.hotkey-row .hotkey-tip{
+    position:absolute;
+    left:42px;
+    top:100%;
+    margin-top:4px;
+    padding:4px 8px;
+    font-size:11px;
+    color:#e2e8f0;
+    background:#0f172a;
+    border:1px solid #475569;
+    border-radius:4px;
+    white-space:nowrap;
+    pointer-events:none;
+    opacity:0;
+    transform:translateY(-4px);
+    transition:opacity .12s,transform .12s;
+    z-index:5;
+}
+.hotkey-row:hover .hotkey-tip,
+.hotkey-row:focus-within .hotkey-tip{opacity:1;transform:translateY(0);}
+*/
+
+/* 快捷键输入框 */
 .hotkey-input{
     width:100%;
     padding:8px 10px;
@@ -38,8 +78,28 @@ input[type="checkbox"]{width:16px;height:16px;cursor:pointer;}
 .setting-btn:hover{background:#475569;}
 .setting-btn:active{transform:translateY(1px);}
 
+/* 拨动开关（样式设置：标题遮挡 / 小窗样式） */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;}
+.toggle-label{font-size:14px;color:#cbd5e1;}
+.toggle-switch{position:relative;display:inline-block;width:42px;height:22px;flex:none;cursor:pointer;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;margin:0;}
+.toggle-slider{position:absolute;inset:0;background:#475569;border-radius:22px;transition:background .2s ease;}
+.toggle-slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:#e2e8f0;border-radius:50%;transition:transform .2s ease;}
+.toggle-switch input:checked + .toggle-slider{background:#2563eb;}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);}
+.toggle-switch input:focus-visible + .toggle-slider{outline:2px solid #60a5fa;outline-offset:2px;}
+
+/* 拖动条（样式设置：小窗尺寸阈值） */
+.range-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.range-label{flex:none;width:64px;font-size:13px;color:#cbd5e1;}
+.range-value{flex:none;min-width:36px;font-size:12px;color:#94a3b8;text-align:right;}
+.range-slider{flex:1;-webkit-appearance:none;appearance:none;height:6px;background:#475569;border-radius:3px;outline:none;cursor:pointer;}
+.range-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:#2563eb;border-radius:50%;cursor:pointer;border:none;}
+.range-slider::-moz-range-thumb{width:16px;height:16px;background:#2563eb;border-radius:50%;cursor:pointer;border:none;}
+.range-slider:focus-visible{outline:2px solid #60a5fa;outline-offset:2px;}
+
 /* 快捷栏设置 */
-.side-layout-cfg{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
+.side-layout-cfg{display:flex;flex-direction:column;gap:4px;}
 .side-layout-row{display:flex;align-items:center;gap:8px;}
 .side-layout-row label{margin:0;flex:none;width:48px;font-size:13px;color:#cbd5e1;}
 .side-layout-row select{
@@ -57,7 +117,7 @@ input[type="checkbox"]{width:16px;height:16px;cursor:pointer;}
 .side-layout-row select option{background:#1e293b;color:#e2e8f0;}
 
 /* 功能与脚本管理 */
-.widget-mgr{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.widget-mgr{display:flex;flex-direction:column;gap:6px;}
 .wm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:#1e293b;border:1px solid #334155;border-radius:5px;}
 .wm-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .wm-name{font-size:13px;color:#e2e8f0;font-weight:500;}
