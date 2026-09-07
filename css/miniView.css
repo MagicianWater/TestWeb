@@ -1,0 +1,28 @@
+/* miniView - 小窗样式（独立模块）
+ * 当窗口边长 < 450px 时，主界面降级为紧凑小窗视图，
+ * 仅显示资源数值，适合未来打包为桌面可执行文件时的紧凑展示。
+ * 本文件独立管理小窗外观，便于整体抽离复用。
+ */
+.mini-view{
+    display:none;
+    text-align:center;
+    font-size:18px;
+    gap:10px;
+    flex-direction:column;
+    /* 桌面小窗风格 */
+    padding:18px 24px;
+    background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);
+    border:1px solid #334155;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    color:#e2e8f0;
+    user-select:none;
+}
+.mini-view > div{
+    line-height:1.6;
+}
+.mini-view span{
+    color:#38bdf8;
+    font-weight:bold;
+    font-family:Consolas,"Microsoft Yahei",monospace;
+}
