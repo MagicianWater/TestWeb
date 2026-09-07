@@ -4,8 +4,8 @@
         <h3>账号登录</h3>
         <p class="tip">登录后可使用聊天、市场等联机功能。没有账号？直接注册即可。</p>
         <div class="acct-form">
-            <input type="email" id="acctEmail" class="acct-input" placeholder="邮箱地址" autocomplete="off">
-            <input type="password" id="acctPassword" class="acct-input" placeholder="密码（至少6位）" autocomplete="off">
+            <input type="email" id="acctEmail" class="acct-input" placeholder="邮箱地址" autocomplete="username">
+            <input type="password" id="acctPassword" class="acct-input" placeholder="密码（至少6位）" autocomplete="current-password">
         </div>
         <div class="acct-actions">
             <button id="acctLoginBtn" class="acct-btn acct-btn-primary">登录</button>
@@ -24,9 +24,10 @@
                 <span class="acct-info-label">邮箱</span>
                 <span class="acct-info-value" id="acctUserEmail">—</span>
             </div>
-            <div class="acct-info-row">
+            <div class="acct-info-row acct-name-row">
                 <span class="acct-info-label">用户名</span>
-                <span class="acct-info-value" id="acctUsername">—</span>
+                <span class="acct-info-value acct-editable" id="acctUsername" title="点击修改用户名">—</span>
+                <input type="text" id="acctUsernameEdit" class="acct-input acct-edit-input" maxlength="16" placeholder="输入新用户名" style="display:none;" autocomplete="off">
             </div>
             <div class="acct-info-row">
                 <span class="acct-info-label">词元余额</span>
@@ -37,17 +38,7 @@
                 <span class="acct-info-value" id="acctCreatedAt">—</span>
             </div>
         </div>
-    </div>
-    <div class="card theme-pink">
-        <h3>修改用户名</h3>
-        <p class="tip">用户名将显示在聊天和市场</p>
-        <div class="acct-form">
-            <input type="text" id="acctNewName" class="acct-input" placeholder="输入新用户名" maxlength="16">
-        </div>
-        <div class="acct-actions">
-            <button id="acctSaveNameBtn" class="acct-btn acct-btn-primary">保存</button>
-        </div>
-        <p class="tip" id="acctNameMsg" style="min-height:18px;"></p>
+        <p class="tip" id="acctNameMsg"></p>
     </div>
     <div class="card theme-pink">
         <h3>账号操作</h3>

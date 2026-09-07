@@ -28,6 +28,8 @@ var AccountPanel = {
             userView.style.display = '';
             this.loadProfile();
         }else{
+            // 登出/未登录时清理可能残留的用户名编辑态
+            this.cancelEditName();
             guestView.style.display = '';
             userView.style.display = 'none';
         }
@@ -57,7 +59,8 @@ var AccountPanel = {
         const loginBtn = document.getElementById('acctLoginBtn');
         const signupBtn = document.getElementById('acctSignupBtn');
         const logoutBtn = document.getElementById('acctLogoutBtn');
-        const saveNameBtn = document.getElementById('acctSaveNameBtn');
+        const nameEl = document.getElementById('acctUsername');
+        const nameInput = document.getElementById('acctUsernameEdit');
 
         if(loginBtn){
             loginBtn.onclick = function(){ self.handleLogin(); };
@@ -68,8 +71,17 @@ var AccountPanel = {
         if(logoutBtn){
             logoutBtn.onclick = function(){ self.handleLogout(); };
         }
-        if(saveNameBtn){
-            saveNameBtn.onclick = function(){ self.handleSaveName(); };
+        // 用户名行内编辑：点击进入编辑态
+        if(nameEl){
+            nameEl.onclick = function(){ self.startEditName(); };
+        }
+        if(nameInput){
+            nameInput.onkeydown = function(e){
+                if(e.key === 'Enter'){ e.preventDefault(); self.handleSaveName(); }
+                else if(e.key === 'Escape'){ e.preventDefault(); self.cancelEditName(); }
+            };
+            // 失焦保存（靠 editNameActive 标志防重入）
+            nameInput.onblur = function(){ self.handleSaveName(); };
         }
         // 回车提交登录
         const pwdInput = document.getElementById('acctPassword');
@@ -78,6 +90,35 @@ var AccountPanel = {
                 if(e.key === 'Enter') self.handleLogin();
             };
         }
+    },
+
+    //===== 进入用户名编辑态 =====
+    editNameActive: false,
+    startEditName: function(){
+        if(this.editNameActive) return;
+        const span = document.getElementById('acctUsername');
+        const input = document.getElementById('acctUsernameEdit');
+        if(!span || !input) return;
+        const current = span.textContent.trim() === '—' ? '' : span.textContent.trim();
+        input.value = current;
+        span.style.display = 'none';
+        input.style.display = '';
+        input.focus();
+        input.select();
+        this.editNameActive = true;
+        const tip = document.getElementById('acctNameMsg');
+        if(tip) tip.textContent = '按 Enter 保存，Esc 取消';
+    },
+
+    //===== 退出用户名编辑态（不保存） =====
+    cancelEditName: function(){
+        this.editNameActive = false;
+        const span = document.getElementById('acctUsername');
+        const input = document.getElementById('acctUsernameEdit');
+        if(span) span.style.display = '';
+        if(input){ input.style.display = 'none'; input.value = ''; }
+        const tip = document.getElementById('acctNameMsg');
+        if(tip) tip.textContent = '';
     },
 
     //===== 处理登录 =====
@@ -124,21 +165,34 @@ var AccountPanel = {
         this.render();
     },
 
-    //===== 保存用户名 =====
+    //===== 保存用户名（行内编辑） =====
     handleSaveName: async function(){
-        const input = document.getElementById('acctNewName');
+        // 非编辑态直接返回，避免失焦回调重复触发
+        if(!this.editNameActive) return;
+        const input = document.getElementById('acctUsernameEdit');
         const newName = input ? input.value.trim() : '';
         const tip = document.getElementById('acctNameMsg');
-        if(!newName){ if(tip) tip.textContent = '请输入新用户名'; return; }
+        if(!newName){ if(tip) tip.textContent = '用户名不能为空'; return; }
         if(newName.length > 16){ if(tip) tip.textContent = '用户名最多16个字符'; return; }
+        // 先退出编辑态，避免保存期间失焦再次触发
+        this.editNameActive = false;
         if(tip) tip.textContent = '保存中...';
         const updated = await window.SupabaseClient.updateProfile({ username: newName });
         if(updated){
-            if(tip) tip.textContent = '保存成功';
-            if(input) input.value = '';
+            if(tip) tip.textContent = '用户名已更新';
+            this.cancelEditName();
             this.loadProfile();
+            // 通知聊天模块刷新本地用户名缓存，并就地更新自己历史消息的显示名
+            if(window.ChatCore && typeof window.ChatCore.onUsernameChanged === 'function'){
+                window.ChatCore.onUsernameChanged(newName);
+            }
+            const tipRef = tip;
+            setTimeout(function(){ if(tipRef && tipRef.textContent === '用户名已更新') tipRef.textContent = ''; }, 2000);
         }else{
-            if(tip) tip.textContent = '保存失败';
+            // 失败：恢复编辑态让用户重试
+            this.editNameActive = true;
+            if(input){ input.focus(); }
+            if(tip) tip.textContent = '保存失败，请重试';
         }
     },
 
