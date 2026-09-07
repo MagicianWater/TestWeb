@@ -1,0 +1,93 @@
+/* chat - 聊天栏样式 */
+#chatRoot{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;font-size:13px;color:#e2e8f0;font-family:inherit;}
+#chatRoot *{box-sizing:border-box;}
+
+/* 头部：标题 + 频道标签 */
+#chatRoot .chat-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex:none;}
+#chatRoot .chat-title{margin:0;font-size:15px;color:#60a5fa;font-weight:600;flex:none;}
+#chatRoot .chat-channels{display:flex;gap:4px;flex:1;overflow-x:auto;}
+#chatRoot .chat-channel-tab{
+    flex:none;
+    padding:2px 10px;
+    font-size:12px;
+    color:#94a3b8;
+    background:#1e293b;
+    border:1px solid #334155;
+    border-radius:3px;
+    cursor:pointer;
+    white-space:nowrap;
+}
+#chatRoot .chat-channel-tab:hover{color:#e2e8f0;background:#334155;}
+#chatRoot .chat-channel-tab.active{color:#fff;background:#2563eb;border-color:#3b82f6;}
+
+/* 消息列表区 */
+#chatRoot .chat-msg-wrap{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    background:#0f172a;
+    border:1px solid #1e293b;
+    border-radius:4px;
+    padding:6px 8px;
+}
+#chatRoot .chat-msg-wrap::-webkit-scrollbar{width:6px;}
+#chatRoot .chat-msg-wrap::-webkit-scrollbar-track{background:transparent;}
+#chatRoot .chat-msg-wrap::-webkit-scrollbar-thumb{background:#334155;border-radius:3px;}
+
+/* 单条消息 */
+#chatRoot .chat-msg{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    padding:2px 6px;
+    line-height:1.5;
+    word-break:break-all;
+    border-radius:4px;
+}
+#chatRoot .chat-msg-name{flex:none;font-size:12px;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#chatRoot .chat-msg-text{flex:1;min-width:0;font-size:13px;}
+#chatRoot .chat-msg-time{flex:none;font-size:10px;color:#64748b;}
+
+/* 自己的消息：蓝色用户名 + 蓝色背景 */
+#chatRoot .chat-msg-self{background:rgba(96,165,250,0.12);}
+#chatRoot .chat-msg-self .chat-msg-name{color:#60a5fa;}
+/* 他人的消息：绿色用户名 + 绿色背景 */
+#chatRoot .chat-msg-other{background:rgba(52,211,153,0.12);}
+#chatRoot .chat-msg-other .chat-msg-name{color:#34d399;}
+/* 系统消息：红色 System 用户名 + 红色文字 + 红色背景，靠左显示 */
+#chatRoot .chat-msg-system{background:rgba(248,113,113,0.12);}
+#chatRoot .chat-msg-system .chat-msg-name{color:#f87171;}
+#chatRoot .chat-msg-system .chat-msg-text{color:#f87171;}
+
+/* 输入区 */
+#chatRoot .chat-input-row{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+    flex:none;
+}
+#chatRoot .chat-input-row input{
+    flex:1;
+    padding:6px 10px;
+    font-size:13px;
+    color:#e2e8f0;
+    background:#1e293b;
+    border:1px solid #475569;
+    border-radius:4px;
+    outline:none;
+}
+#chatRoot .chat-input-row input:focus{border-color:#2563eb;}
+#chatRoot .chat-input-row input:disabled{opacity:0.5;cursor:not-allowed;}
+#chatRoot .chat-input-row input::placeholder{color:#64748b;}
+#chatRoot .chat-input-row button{
+    flex:none;
+    padding:6px 14px;
+    font-size:13px;
+    color:#fff;
+    background:#2563eb;
+    border:1px solid #3b82f6;
+    border-radius:4px;
+    cursor:pointer;
+}
+#chatRoot .chat-input-row button:hover:not(:disabled){background:#3b82f6;}
+#chatRoot .chat-input-row button:disabled{opacity:0.5;cursor:not-allowed;background:#334155;border-color:#475569;}
