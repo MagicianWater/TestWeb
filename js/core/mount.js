@@ -41,6 +41,8 @@
         { id:'scriptTool', sel:'#scriptToolRoot', name:'脚本工具', script:'./js/tools/scriptTool.js?v=20260902' },
         // dev-SQL：开发者数据库查询工具（临时调试用，后期移除）
         { id:'devSQL',     sel:'#devSQLRoot',     name:'dev-SQL',  script:'./js/tools/devSQL.js?v=20260903' },
+        // 放大镜：悬浮独立放大窗口（复刻老 Win10 放大镜，通过四边弹窗栏挂载使用）
+        { id:'magnifier',  sel:'#magnifierRoot',  name:'放大镜',   script:'./js/tools/magnifier.js?v=20260910' },
         // 聊天栏：全服公用聊天（登录后可发送，Realtime 实时推送）
         { id:'chat',       sel:'#chatRoot',       name:'聊天',     script:'./js/core/chat/chat.js?v=20260906' }
     ];
